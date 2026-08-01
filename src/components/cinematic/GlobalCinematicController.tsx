@@ -10,7 +10,6 @@ export const GlobalCinematicController: React.FC = () => {
   const isTransitioningRef = useRef(false);
   const touchStartYRef = useRef(0);
 
-  // Keep phaseRef updated with latest state
   useEffect(() => {
     phaseRef.current = phase;
   }, [phase]);
@@ -24,8 +23,7 @@ export const GlobalCinematicController: React.FC = () => {
         setScrollProgress(progress);
       }
 
-      // If user scrolls back to the top of the page, restore Hero section
-      if (window.scrollY <= 10 && phaseRef.current !== "HERO_IDLE" && !isTransitioningRef.current) {
+      if (window.scrollY <= 10 && phaseRef.current !== "IDLE" && !isTransitioningRef.current) {
         resetToHero();
       }
     };
@@ -34,10 +32,25 @@ export const GlobalCinematicController: React.FC = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [resetToHero, setScrollProgress]);
 
-  // Forward transition sequence: Hero -> World
-  const startCinematicSequence = () => {
-    if (phaseRef.current !== "HERO_IDLE" || isTransitioningRef.current) return;
+  // Rule 6: First Scroll -> Prepare transition (TRANSITION_PREP)
+  const triggerTransitionPrep = () => {
+    if (isTransitioningRef.current) return;
     isTransitioningRef.current = true;
+
+    setPhase("TRANSITION_PREP");
+    
+    // Hold preparation pause (1.5s camera push, spotlight tightening)
+    setTimeout(() => {
+      isTransitioningRef.current = false;
+    }, 1800);
+  };
+
+  // Rule 7: Second Scroll -> Full ~10-12 second cinematic transition (WORLD_TRANSITION -> WORLD_ACTIVE)
+  const triggerWorldTransition = () => {
+    if (isTransitioningRef.current) return;
+    isTransitioningRef.current = true;
+
+    setPhase("WORLD_TRANSITION");
 
     const tl = gsap.timeline({
       onComplete: () => {
@@ -46,57 +59,40 @@ export const GlobalCinematicController: React.FC = () => {
       },
     });
 
-    tl.to({}, {
-      duration: 0.35,
-      onStart: () => setPhase("HERO_FREEZE"),
-    })
-    .to({}, {
-      duration: 0.55,
-      onStart: () => setPhase("HERO_PUSH"),
-    })
-    .to({}, {
-      duration: 0.65,
-      onStart: () => setPhase("PARTICLE_DISSOLVE"),
-    })
-    .to({}, {
-      duration: 0.75,
-      onStart: () => setPhase("FLY_THROUGH"),
-    })
-    .to({}, {
-      duration: 0.65,
-      onStart: () => setPhase("WORLD_ASSEMBLE"),
-    });
+    // 10-12 second cinematic timing specification
+    tl.to({}, { duration: 2.0 }) // Portrait dissolve
+      .to({}, { duration: 2.5 }) // Particle travel / flythrough
+      .to({}, { duration: 2.5 }) // Architecture assembly
+      .to({}, { duration: 1.2 }); // Mechanical Compass reveal
   };
 
-  // Reverse restoration sequence: World -> Hero
+  // Reverse restoration sequence
   const reverseCinematicSequence = () => {
-    if (phaseRef.current === "HERO_IDLE" || isTransitioningRef.current) return;
+    if (phaseRef.current === "IDLE" || isTransitioningRef.current) return;
     isTransitioningRef.current = true;
 
-    const tl = gsap.timeline({
-      onComplete: () => {
-        resetToHero();
-        isTransitioningRef.current = false;
-      },
-    });
-
-    tl.to({}, {
-      duration: 0.4,
-      onStart: () => setPhase("PARTICLE_DISSOLVE"),
-    })
-    .to({}, {
-      duration: 0.4,
-      onStart: () => setPhase("HERO_FREEZE"),
-    });
+    resetToHero();
+    isTransitioningRef.current = false;
   };
 
   // Event handlers for Wheel, Touch, and Keyboard
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
-      if (phaseRef.current === "HERO_IDLE" && e.deltaY > 0) {
-        e.preventDefault();
-        startCinematicSequence();
-      } else if (phaseRef.current !== "HERO_IDLE" && e.deltaY < 0 && window.scrollY <= 100) {
+      const current = phaseRef.current;
+
+      if (e.deltaY > 0) {
+        if (current === "ENTER_READY") {
+          e.preventDefault();
+          triggerTransitionPrep();
+        } else if (current === "TRANSITION_PREP") {
+          e.preventDefault();
+          triggerWorldTransition();
+        } else if (current === "IDLE" || current === "HOVER_READY" || current === "IDENTITY_UNLOCKED") {
+          e.preventDefault();
+          // Dispatch hint event: "Interact with the portrait first."
+          window.dispatchEvent(new CustomEvent("hero:interact_hint"));
+        }
+      } else if (e.deltaY < 0 && window.scrollY <= 100 && current !== "IDLE") {
         e.preventDefault();
         reverseCinematicSequence();
       }
@@ -108,20 +104,39 @@ export const GlobalCinematicController: React.FC = () => {
 
     const handleTouchMove = (e: TouchEvent) => {
       const deltaY = touchStartYRef.current - e.touches[0].clientY;
-      if (phaseRef.current === "HERO_IDLE" && deltaY > 15) {
-        e.preventDefault();
-        startCinematicSequence();
-      } else if (phaseRef.current !== "HERO_IDLE" && deltaY < -15 && window.scrollY <= 100) {
+      const current = phaseRef.current;
+
+      if (deltaY > 20) {
+        if (current === "ENTER_READY") {
+          e.preventDefault();
+          triggerTransitionPrep();
+        } else if (current === "TRANSITION_PREP") {
+          e.preventDefault();
+          triggerWorldTransition();
+        } else if (current === "IDLE" || current === "HOVER_READY" || current === "IDENTITY_UNLOCKED") {
+          e.preventDefault();
+          window.dispatchEvent(new CustomEvent("hero:interact_hint"));
+        }
+      } else if (deltaY < -20 && window.scrollY <= 100 && current !== "IDLE") {
         e.preventDefault();
         reverseCinematicSequence();
       }
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (phaseRef.current === "HERO_IDLE" && (e.key === "ArrowDown" || e.key === "PageDown" || e.key === " ")) {
-        e.preventDefault();
-        startCinematicSequence();
-      } else if (phaseRef.current !== "HERO_IDLE" && (e.key === "ArrowUp" || e.key === "PageUp") && window.scrollY <= 100) {
+      const current = phaseRef.current;
+      if (e.key === "ArrowDown" || e.key === "PageDown" || e.key === " ") {
+        if (current === "ENTER_READY") {
+          e.preventDefault();
+          triggerTransitionPrep();
+        } else if (current === "TRANSITION_PREP") {
+          e.preventDefault();
+          triggerWorldTransition();
+        } else if (current === "IDLE" || current === "HOVER_READY" || current === "IDENTITY_UNLOCKED") {
+          e.preventDefault();
+          window.dispatchEvent(new CustomEvent("hero:interact_hint"));
+        }
+      } else if ((e.key === "ArrowUp" || e.key === "PageUp") && window.scrollY <= 100 && current !== "IDLE") {
         e.preventDefault();
         reverseCinematicSequence();
       }
@@ -142,6 +157,7 @@ export const GlobalCinematicController: React.FC = () => {
 
   return null;
 };
+
 
 
 

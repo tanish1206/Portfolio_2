@@ -22,12 +22,12 @@ function CinematicCameraController({ scrollProgress }: { scrollProgress: number 
     let targetX = Math.sin(scrollProgress * Math.PI) * 2;
     let targetY = Math.cos(scrollProgress * Math.PI * 0.5) * 0.4;
 
-    if (phase === "HERO_PUSH") {
+    if (phase === "TRANSITION_PREP") {
       targetZ = 5;
-    } else if (phase === "PARTICLE_DISSOLVE") {
-      targetZ = 3;
-    } else if (phase === "FLY_THROUGH") {
-      targetZ = 0.5;
+    } else if (phase === "WORLD_TRANSITION") {
+      targetZ = 2;
+    } else if (phase === "WORLD_ACTIVE") {
+      targetZ = 8 - scrollProgress * 6;
     }
 
     state.camera.position.x = THREE.MathUtils.lerp(state.camera.position.x, targetX, 0.05);
@@ -69,7 +69,7 @@ function AtmosphericDustParticles({ scrollProgress }: { scrollProgress: number }
 
   useFrame((_, delta) => {
     if (!pointsRef.current) return;
-    const speedMultiplier = phase === "FLY_THROUGH" ? 4 : phase === "PARTICLE_DISSOLVE" ? 2 : 1;
+    const speedMultiplier = phase === "WORLD_TRANSITION" ? 3.5 : phase === "TRANSITION_PREP" ? 1.8 : 1;
     pointsRef.current.rotation.x += delta * (0.015 + scrollProgress * 0.08) * speedMultiplier;
     pointsRef.current.rotation.y += delta * (0.03 + scrollProgress * 0.15) * speedMultiplier;
   });
@@ -94,7 +94,7 @@ export const Interactive3DWorld: React.FC<Interactive3DWorldProps> = ({
   const { phase } = useCinematic();
 
   const getObj = (id: string) => FLOATING_OBJECTS.find((o) => o.id === id)!;
-  const isWorldVisible = phase === "WORLD_ASSEMBLE" || phase === "WORLD_ACTIVE" || scrollProgress > 0.1;
+  const isWorldVisible = phase === "WORLD_TRANSITION" || phase === "WORLD_ACTIVE" || scrollProgress > 0.1;
 
   return (
     <div className="pointer-events-auto fixed inset-0 z-0 h-full w-full bg-background">

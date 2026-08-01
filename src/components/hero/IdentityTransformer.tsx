@@ -9,11 +9,13 @@ import { useCinematic } from "@/context/CinematicContext";
 interface IdentityTransformerProps {
   onIdentityChange?: (identity: Identity) => void;
   onAcknowledge?: () => void;
+  onIdentityDiscovered?: () => void;
 }
 
 export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
   onIdentityChange,
   onAcknowledge,
+  onIdentityDiscovered,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isGlitching, setIsGlitching] = useState(false);
@@ -22,22 +24,17 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
   const [mouseOffset, setMouseOffset] = useState({ x: 0, y: 0 });
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const hoverDelayTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const cycleIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const { phase } = useCinematic();
   const currentIdentity = IDENTITIES[currentIndex];
 
-  const isFreezing = phase === "HERO_FREEZE" || phase === "HERO_PUSH";
-  const isDissolving =
-    phase === "PARTICLE_DISSOLVE" ||
-    phase === "FLY_THROUGH" ||
-    phase === "WORLD_ASSEMBLE" ||
-    phase === "WORLD_ACTIVE";
+  const isPrepped = phase === "TRANSITION_PREP";
+  const isDissolving = phase === "WORLD_TRANSITION" || phase === "WORLD_ACTIVE";
 
-  // State 1 & 2: Restrained cursor tracking & eyes following cursor (max 2°)
+  // Rule 2: Eyes follow cursor, shoulders breathe slightly, light intensity increases
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!containerRef.current || isFreezing || isDissolving) return;
+    if (!containerRef.current || isPrepped || isDissolving) return;
     const rect = containerRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
@@ -54,43 +51,35 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
   const handleMouseLeave = () => {
     setIsHovered(false);
     setMouseOffset({ x: 0, y: 0 });
-    if (hoverDelayTimerRef.current) clearTimeout(hoverDelayTimerRef.current);
-    if (cycleIntervalRef.current) clearInterval(cycleIntervalRef.current);
+    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
   };
 
-  // State 2 & 3: Hover anticipate ~1s before identity sequence unlocks
+  // Rule 2 & Rule 3: Hover ~700ms -> perform ONE identity transformation (no auto loop)
   const handleMouseEnter = () => {
-    if (isFreezing || isDissolving) return;
+    if (isPrepped || isDissolving) return;
     setIsHovered(true);
 
-    if (hoverDelayTimerRef.current) clearTimeout(hoverDelayTimerRef.current);
-    if (cycleIntervalRef.current) clearInterval(cycleIntervalRef.current);
+    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
 
-    // 1-second hover anticipation delay before unlocking identity cycle
-    hoverDelayTimerRef.current = setTimeout(() => {
-      triggerTransformation();
-      cycleIntervalRef.current = setInterval(() => {
-        triggerTransformation();
-      }, 3000);
-    }, 1000);
+    // 700ms anticipation delay before ONE single transformation
+    hoverTimerRef.current = setTimeout(() => {
+      triggerSingleTransformation();
+    }, 700);
   };
 
-  // State 4: Portrait Acknowledgment ("The portrait noticed me")
+  // Rule 5: Portrait Click Acknowledgement ("I unlocked something")
   const handleClick = () => {
-    if (isFreezing || isDissolving || isGlitching) return;
+    if (isPrepped || isDissolving || isGlitching) return;
 
-    // Trigger Acknowledgment pulse: Eye contact, still posture, red light pulse
     setIsAcknowledged(true);
     if (onAcknowledge) onAcknowledge();
 
     setTimeout(() => {
       setIsAcknowledged(false);
-    }, 1500);
-
-    triggerTransformation();
+    }, 1400);
   };
 
-  const triggerTransformation = () => {
+  const triggerSingleTransformation = () => {
     setIsGlitching(true);
     setTimeout(() => {
       setCurrentIndex((prev) => {
@@ -98,6 +87,7 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
         if (onIdentityChange) onIdentityChange(IDENTITIES[next]);
         return next;
       });
+      if (onIdentityDiscovered) onIdentityDiscovered();
     }, 400);
 
     setTimeout(() => {
@@ -110,8 +100,7 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
       onIdentityChange(IDENTITIES[0]);
     }
     return () => {
-      if (hoverDelayTimerRef.current) clearTimeout(hoverDelayTimerRef.current);
-      if (cycleIntervalRef.current) clearInterval(cycleIntervalRef.current);
+      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
     };
   }, []);
 
@@ -124,7 +113,7 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
       onClick={handleClick}
       className="interactive-hover absolute inset-0 w-full h-full flex items-center justify-center cursor-pointer select-none pointer-events-auto z-10"
     >
-      {/* 1. Overhead Deep Crimson Spotlight Beam (Drifts and breathes dynamically) */}
+      {/* Volumetric Spotlight Beam (Brighter on hover, narrows on click acknowledgement) */}
       <motion.div
         className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-[75vh] w-[85vw] max-w-[1000px] rounded-full blur-[120px] opacity-65 z-0"
         style={{
@@ -132,34 +121,34 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
           willChange: "transform, opacity",
         }}
         animate={{
-          scale: isDissolving ? 1.8 : isAcknowledged ? 0.9 : isHovered ? 1.1 : isGlitching ? 1.2 : 1,
-          opacity: isDissolving ? 0 : isHovered ? 0.8 : 0.65,
+          scale: isDissolving ? 1.8 : isAcknowledged ? 0.85 : isHovered ? 1.12 : isGlitching ? 1.2 : 1,
+          opacity: isDissolving ? 0 : isHovered ? 0.85 : 0.65,
           x: mouseOffset.x * 3,
         }}
         transition={{ duration: 0.8, ease: "easeOut" }}
       />
 
-      {/* 2. Atmospheric Volumetric Dust & Haze Layer */}
+      {/* Volumetric Dust & Atmospheric Haze */}
       <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 h-[50vh] w-[50vw] max-w-[700px] rounded-full blur-[80px] opacity-30 bg-gradient-to-b from-[#FF1E40] to-transparent z-0" />
 
-      {/* State 4 Acknowledgment Light Pulse Overlay */}
+      {/* Click Acknowledgement Red Pulse Ring */}
       {isAcknowledged && (
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: [0, 0.85, 0], scale: [0.9, 1.2, 1.4] }}
+          animate={{ opacity: [0, 0.85, 0], scale: [0.9, 1.25, 1.45] }}
           transition={{ duration: 1.4, ease: "easeOut" }}
           className="pointer-events-none absolute left-1/2 top-1/3 -translate-x-1/2 h-64 w-64 rounded-full bg-accent-crimson/25 blur-2xl z-20"
         />
       )}
 
-      {/* 3. Floating Person Cinematic Layer (NO CONTAINER BOX — Scale 1.25, object-fit contain) */}
+      {/* Floating Portrait Scene Layer (Scale 1.25, object-fit contain, no container box) */}
       <motion.div
         className="portrait-vignette-mask relative z-10 w-[90vw] max-w-[650px] h-[55vh] md:h-[65vh] lg:h-[70vh] pointer-events-none flex items-center justify-center"
         style={{ willChange: "transform, opacity, filter" }}
         animate={{
-          scale: isDissolving ? 1.3 : phase === "HERO_PUSH" ? 1.15 : isHovered ? 1.02 : 1,
+          scale: isDissolving ? 1.3 : isPrepped ? 1.15 : isHovered ? 1.02 : 1,
           opacity: isDissolving ? 0 : 1,
-          y: isAcknowledged ? 0 : isFreezing ? 0 : [0, -6, 0],
+          y: isAcknowledged || isPrepped ? 0 : [0, -6, 0],
           rotateX: mouseOffset.y * -1,
           rotateY: mouseOffset.x,
         }}
@@ -171,7 +160,6 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
           rotateY: { type: "spring", stiffness: 160, damping: 22 },
         }}
       >
-        {/* Active Person Asset with transform scale(1.25) */}
         <AnimatePresence mode="wait">
           <motion.div
             key={currentIdentity.id}
@@ -193,20 +181,6 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
           </motion.div>
         </AnimatePresence>
 
-        {/* Preload Identity Assets */}
-        <div className="hidden">
-          {IDENTITIES.map((identity) => (
-            <Image
-              key={identity.id}
-              src={identity.image}
-              alt={identity.title}
-              width={600}
-              height={800}
-              priority={false}
-            />
-          ))}
-        </div>
-
         {/* Glitch Distortion Overlay */}
         {isGlitching && (
           <div className="animate-glitch pointer-events-none absolute inset-0 z-20 overflow-hidden bg-accent-crimson/15 backdrop-blur-[2px]">
@@ -219,4 +193,5 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
     </div>
   );
 };
+
 

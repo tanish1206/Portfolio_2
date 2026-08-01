@@ -1,14 +1,16 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode } from "react";
 
 export type CinematicPhase =
-  | "HERO_IDLE"
-  | "HERO_FREEZE"
-  | "HERO_PUSH"
-  | "PARTICLE_DISSOLVE"
-  | "FLY_THROUGH"
-  | "WORLD_ASSEMBLE"
+  | "IDLE"
+  | "HOVER_READY"
+  | "IDENTITY_UNLOCKED"
+  | "CLICK_READY"
+  | "PORTRAIT_ACKNOWLEDGED"
+  | "ENTER_READY"
+  | "TRANSITION_PREP"
+  | "WORLD_TRANSITION"
   | "WORLD_ACTIVE";
 
 interface CinematicContextType {
@@ -16,23 +18,17 @@ interface CinematicContextType {
   scrollProgress: number;
   setPhase: (phase: CinematicPhase) => void;
   setScrollProgress: (progress: number) => void;
-  beginWorldTransition: () => void;
   resetToHero: () => void;
 }
 
 const CinematicContext = createContext<CinematicContextType | undefined>(undefined);
 
 export const CinematicProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [phase, setPhase] = useState<CinematicPhase>("HERO_IDLE");
+  const [phase, setPhase] = useState<CinematicPhase>("IDLE");
   const [scrollProgress, setScrollProgress] = useState(0);
 
-  const beginWorldTransition = () => {
-    if (phase !== "HERO_IDLE") return;
-    setPhase("HERO_FREEZE");
-  };
-
   const resetToHero = () => {
-    setPhase("HERO_IDLE");
+    setPhase("IDLE");
     setScrollProgress(0);
   };
 
@@ -43,7 +39,6 @@ export const CinematicProvider: React.FC<{ children: ReactNode }> = ({ children 
         scrollProgress,
         setPhase,
         setScrollProgress,
-        beginWorldTransition,
         resetToHero,
       }}
     >
@@ -59,3 +54,4 @@ export const useCinematic = () => {
   }
   return context;
 };
+
