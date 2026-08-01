@@ -35,7 +35,7 @@ export const FloatingObjectsScene: React.FC<FloatingObjectsSceneProps> = ({
         transition={{ duration: 0.8 }}
         className="z-10 mb-16 text-center space-y-3"
       >
-        <div className="inline-flex items-center gap-2 rounded-full border border-accent-blue/20 bg-accent-blue/5 px-4 py-1 text-xs text-accent-blue">
+        <div className="inline-flex items-center gap-2 rounded-full border border-accent-crimson/30 bg-accent-crimson/10 px-4 py-1 text-xs text-accent-crimson">
           <Sparkles className="h-3.5 w-3.5" />
           <span className="font-mono tracking-wider uppercase">Interactive Cinematic Universe</span>
         </div>
@@ -126,7 +126,7 @@ export const FloatingObjectsScene: React.FC<FloatingObjectsSceneProps> = ({
 
                 {/* Name & Narrative Short Description */}
                 <div className="space-y-2">
-                  <h3 className="font-space text-xl font-bold tracking-tight text-white group-hover:text-accent-blue transition-colors">
+                  <h3 className="font-space text-xl font-bold tracking-tight text-white group-hover:text-accent-crimson transition-colors">
                     {obj.name}
                   </h3>
                   <p className="text-xs text-text-secondary line-clamp-2">
