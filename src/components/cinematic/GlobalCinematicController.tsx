@@ -6,8 +6,14 @@ import gsap from "gsap";
 
 export const GlobalCinematicController: React.FC = () => {
   const { phase, setPhase, setScrollProgress, resetToHero } = useCinematic();
+  const phaseRef = useRef(phase);
   const isTransitioningRef = useRef(false);
   const touchStartYRef = useRef(0);
+
+  // Keep phaseRef updated with latest state
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
 
   // Synchronize scroll progress & automatically restore Hero when near top
   useEffect(() => {
@@ -18,19 +24,19 @@ export const GlobalCinematicController: React.FC = () => {
         setScrollProgress(progress);
       }
 
-      // Restore Hero section when scrolled back to absolute top
-      if (window.scrollY <= 10 && phase !== "HERO_IDLE" && !isTransitioningRef.current) {
+      // If user scrolls back to the top of the page, restore Hero section
+      if (window.scrollY <= 10 && phaseRef.current !== "HERO_IDLE" && !isTransitioningRef.current) {
         resetToHero();
       }
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [phase, resetToHero, setScrollProgress]);
+  }, [resetToHero, setScrollProgress]);
 
-  // Forward transition: Hero -> World
+  // Forward transition sequence: Hero -> World
   const startCinematicSequence = () => {
-    if (phase !== "HERO_IDLE" || isTransitioningRef.current) return;
+    if (phaseRef.current !== "HERO_IDLE" || isTransitioningRef.current) return;
     isTransitioningRef.current = true;
 
     const tl = gsap.timeline({
@@ -62,9 +68,9 @@ export const GlobalCinematicController: React.FC = () => {
     });
   };
 
-  // Reverse transition: World -> Hero
+  // Reverse restoration sequence: World -> Hero
   const reverseCinematicSequence = () => {
-    if (phase === "HERO_IDLE" || isTransitioningRef.current) return;
+    if (phaseRef.current === "HERO_IDLE" || isTransitioningRef.current) return;
     isTransitioningRef.current = true;
 
     const tl = gsap.timeline({
@@ -75,34 +81,22 @@ export const GlobalCinematicController: React.FC = () => {
     });
 
     tl.to({}, {
-      duration: 0.3,
-      onStart: () => setPhase("WORLD_ASSEMBLE"),
-    })
-    .to({}, {
-      duration: 0.4,
-      onStart: () => setPhase("FLY_THROUGH"),
-    })
-    .to({}, {
       duration: 0.4,
       onStart: () => setPhase("PARTICLE_DISSOLVE"),
     })
     .to({}, {
-      duration: 0.3,
-      onStart: () => setPhase("HERO_PUSH"),
-    })
-    .to({}, {
-      duration: 0.3,
+      duration: 0.4,
       onStart: () => setPhase("HERO_FREEZE"),
     });
   };
 
-  // Event handlers for Wheel, Touch, and Keyboard (Bi-directional)
+  // Event handlers for Wheel, Touch, and Keyboard
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
-      if (phase === "HERO_IDLE" && e.deltaY > 0) {
+      if (phaseRef.current === "HERO_IDLE" && e.deltaY > 0) {
         e.preventDefault();
         startCinematicSequence();
-      } else if (phase !== "HERO_IDLE" && e.deltaY < 0 && window.scrollY <= 40) {
+      } else if (phaseRef.current !== "HERO_IDLE" && e.deltaY < 0 && window.scrollY <= 100) {
         e.preventDefault();
         reverseCinematicSequence();
       }
@@ -114,20 +108,20 @@ export const GlobalCinematicController: React.FC = () => {
 
     const handleTouchMove = (e: TouchEvent) => {
       const deltaY = touchStartYRef.current - e.touches[0].clientY;
-      if (phase === "HERO_IDLE" && deltaY > 20) {
+      if (phaseRef.current === "HERO_IDLE" && deltaY > 15) {
         e.preventDefault();
         startCinematicSequence();
-      } else if (phase !== "HERO_IDLE" && deltaY < -20 && window.scrollY <= 40) {
+      } else if (phaseRef.current !== "HERO_IDLE" && deltaY < -15 && window.scrollY <= 100) {
         e.preventDefault();
         reverseCinematicSequence();
       }
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (phase === "HERO_IDLE" && (e.key === "ArrowDown" || e.key === "PageDown" || e.key === " ")) {
+      if (phaseRef.current === "HERO_IDLE" && (e.key === "ArrowDown" || e.key === "PageDown" || e.key === " ")) {
         e.preventDefault();
         startCinematicSequence();
-      } else if (phase !== "HERO_IDLE" && (e.key === "ArrowUp" || e.key === "PageUp") && window.scrollY <= 40) {
+      } else if (phaseRef.current !== "HERO_IDLE" && (e.key === "ArrowUp" || e.key === "PageUp") && window.scrollY <= 100) {
         e.preventDefault();
         reverseCinematicSequence();
       }
@@ -144,9 +138,10 @@ export const GlobalCinematicController: React.FC = () => {
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [phase]);
+  }, []);
 
   return null;
 };
+
 
 
