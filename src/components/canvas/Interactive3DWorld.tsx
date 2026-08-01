@@ -15,18 +15,18 @@ import { FloatingObject, FLOATING_OBJECTS } from "@/data/objects";
 import { useCinematic } from "@/context/CinematicContext";
 
 function CinematicCameraController({ scrollProgress }: { scrollProgress: number }) {
-  const { phase } = useCinematic();
+  const { heroState } = useCinematic();
 
   useFrame((state) => {
     let targetZ = 8 - scrollProgress * 6;
     let targetX = Math.sin(scrollProgress * Math.PI) * 2;
     let targetY = Math.cos(scrollProgress * Math.PI * 0.5) * 0.4;
 
-    if (phase === "TRANSITION_PREP") {
+    if (heroState === "TRANSITION_PREP") {
       targetZ = 5;
-    } else if (phase === "WORLD_TRANSITION") {
+    } else if (heroState === "WORLD_TRANSITION") {
       targetZ = 2;
-    } else if (phase === "WORLD_ACTIVE") {
+    } else if (heroState === "WORLD") {
       targetZ = 8 - scrollProgress * 6;
     }
 
@@ -41,7 +41,7 @@ function CinematicCameraController({ scrollProgress }: { scrollProgress: number 
 
 function AtmosphericDustParticles({ scrollProgress }: { scrollProgress: number }) {
   const pointsRef = useRef<THREE.Points>(null);
-  const { phase } = useCinematic();
+  const { heroState } = useCinematic();
 
   const [positions, colors] = React.useMemo(() => {
     const count = 3500;
@@ -69,7 +69,7 @@ function AtmosphericDustParticles({ scrollProgress }: { scrollProgress: number }
 
   useFrame((_, delta) => {
     if (!pointsRef.current) return;
-    const speedMultiplier = phase === "WORLD_TRANSITION" ? 3.5 : phase === "TRANSITION_PREP" ? 1.8 : 1;
+    const speedMultiplier = heroState === "WORLD_TRANSITION" ? 3.5 : heroState === "TRANSITION_PREP" ? 1.8 : 1;
     pointsRef.current.rotation.x += delta * (0.015 + scrollProgress * 0.08) * speedMultiplier;
     pointsRef.current.rotation.y += delta * (0.03 + scrollProgress * 0.15) * speedMultiplier;
   });
@@ -91,10 +91,10 @@ export const Interactive3DWorld: React.FC<Interactive3DWorldProps> = ({
   onSelectObject,
 }) => {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const { phase } = useCinematic();
+  const { heroState } = useCinematic();
 
   const getObj = (id: string) => FLOATING_OBJECTS.find((o) => o.id === id)!;
-  const isWorldVisible = phase === "WORLD_TRANSITION" || phase === "WORLD_ACTIVE" || scrollProgress > 0.1;
+  const isWorldVisible = heroState === "WORLD_TRANSITION" || heroState === "WORLD" || scrollProgress > 0.1;
 
   return (
     <div className="pointer-events-auto fixed inset-0 z-0 h-full w-full bg-background">
