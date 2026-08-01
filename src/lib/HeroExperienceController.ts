@@ -79,12 +79,8 @@ class HeroExperienceControllerClass {
     if (this.isHovered) return;
     this.isHovered = true;
 
-    if (this.hoverTimer) clearTimeout(this.hoverTimer);
-
-    // Wait 700ms -> perform ONE identity transformation
-    this.hoverTimer = setTimeout(() => {
-      this.advanceIdentity();
-    }, 700);
+    // Immediately advance photo on hover entry (1 hover = 1 photo change)
+    this.advanceIdentity();
   }
 
   public onHoverLeave() {
