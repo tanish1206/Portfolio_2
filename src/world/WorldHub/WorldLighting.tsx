@@ -3,6 +3,7 @@
 import React, { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { WorldPhase } from "@/world/WorldController";
 
 /**
  * WorldLighting.tsx
@@ -83,85 +84,156 @@ function BreathingSpotlight({
 }
 
 interface WorldLightingProps {
-  compassUnlocked: boolean;
+  phase: WorldPhase;
+  compassUnlocked?: boolean;
 }
 
-export const WorldLighting: React.FC<WorldLightingProps> = ({ compassUnlocked }) => {
+export const WorldLighting: React.FC<WorldLightingProps> = ({ phase }) => {
+  const spotLightRef = useRef<THREE.SpotLight>(null);
+  const haloLightRef = useRef<THREE.SpotLight>(null);
+  const spotTargetRef = useRef<THREE.Object3D>(null);
+  const ambientRef = useRef<THREE.AmbientLight>(null);
+  const rimLeftRef = useRef<THREE.PointLight>(null);
+  const rimRightRef = useRef<THREE.PointLight>(null);
+
+  useFrame(({ clock }, delta) => {
+    const t = clock.getElapsedTime();
+    const lerpSpeed = Math.min(delta * 3, 1);
+
+    // Primary spotlight state
+    let targetSpotIntensity = 0;
+    if (
+      phase === "SPOTLIGHT_ON" ||
+      phase === "PILLARS_FADE" ||
+      phase === "MUSEUM_SETTLE" ||
+      phase === "MUSEUM_IDLE" ||
+      phase === "COMPASS_HOVER" ||
+      phase === "COMPASS_TRANSFORM" ||
+      phase === "CAREER_COMPASS" ||
+      phase === "RETURNING"
+    ) {
+      targetSpotIntensity = 10.0 + Math.sin(t * 0.45) * 0.6;
+    }
+
+    // Halo & rim lighting state
+    let targetRimIntensity = 0;
+    if (
+      phase === "PILLARS_FADE" ||
+      phase === "MUSEUM_SETTLE" ||
+      phase === "MUSEUM_IDLE" ||
+      phase === "COMPASS_HOVER" ||
+      phase === "COMPASS_TRANSFORM" ||
+      phase === "CAREER_COMPASS" ||
+      phase === "RETURNING"
+    ) {
+      targetRimIntensity = 0.55;
+    }
+
+    // Ambient light state
+    let targetAmbient = 0.05;
+    if (phase === "FOG_APPEAR" || phase === "FLOOR_REVEAL") targetAmbient = 0.15;
+    else if (phase !== "HERO" && phase !== "FLY_THROUGH" && phase !== "DARK_TRAVERSE") targetAmbient = 0.22;
+
+    if (ambientRef.current) {
+      ambientRef.current.intensity = THREE.MathUtils.lerp(
+        ambientRef.current.intensity,
+        targetAmbient,
+        lerpSpeed
+      );
+    }
+
+    if (spotLightRef.current && spotTargetRef.current) {
+      spotLightRef.current.intensity = THREE.MathUtils.lerp(
+        spotLightRef.current.intensity,
+        targetSpotIntensity,
+        lerpSpeed
+      );
+      // Micro spotlight position drift for atmospheric realism
+      spotLightRef.current.position.x = Math.sin(t * 0.20) * 0.08;
+      spotLightRef.current.target = spotTargetRef.current;
+      spotLightRef.current.target.updateMatrixWorld();
+    }
+
+    if (haloLightRef.current) {
+      haloLightRef.current.intensity = THREE.MathUtils.lerp(
+        haloLightRef.current.intensity,
+        targetSpotIntensity * 0.4,
+        lerpSpeed
+      );
+    }
+
+    if (rimLeftRef.current) {
+      rimLeftRef.current.intensity = THREE.MathUtils.lerp(
+        rimLeftRef.current.intensity,
+        targetRimIntensity,
+        lerpSpeed
+      );
+    }
+    if (rimRightRef.current) {
+      rimRightRef.current.intensity = THREE.MathUtils.lerp(
+        rimRightRef.current.intensity,
+        targetRimIntensity * 0.75,
+        lerpSpeed
+      );
+    }
+  });
+
   return (
     <group>
-      {/*
-        Global ambient — critical: must be high enough that visitors
-        see the concrete walls, pillars, and floor.
-        This is a MUSEUM, not a black void.
-        0.38 gives dark-but-visible, like a real gallery at night.
-      */}
-      <ambientLight intensity={0.38} color="#1A0D0D" />
+      {/* Tertiary: Very faint ambient fill */}
+      <ambientLight ref={ambientRef} intensity={0.05} color="#120808" />
 
-      {/* PRIMARY: Tight crimson feature spotlight — THE focal point */}
-      {compassUnlocked && (
-        <>
-          {/* Main narrow beam — sharp cone on pedestal */}
-          <BreathingSpotlight
-            position={[0, 13.2, 1.5]}
-            targetPos={[0, 1.3, 0]}
-            color="#CC1530"
-            baseIntensity={9.0}
-            breatheAmp={0.5}
-            breatheSpeed={0.42}
-            angle={0.20}
-            penumbra={0.55}
-            distance={22}
-            castShadow
-          />
-          {/* Wide halo — red floor glow around exhibit zone */}
-          <BreathingSpotlight
-            position={[0, 9, 1.0]}
-            targetPos={[0, 0, 0]}
-            color="#7A0F1E"
-            baseIntensity={3.5}
-            breatheAmp={0.3}
-            breatheSpeed={0.28}
-            angle={0.65}
-            penumbra={1.0}
-            distance={20}
-          />
-        </>
-      )}
-
-      {/* White rim left — reveals left wall & pillar silhouettes */}
-      <pointLight
-        position={[-16, 7, -3]}
-        color="#E8E0D5"
-        intensity={0.55}
-        distance={32}
+      {/* Primary: Warm Crimson Spotlight on Pedestal */}
+      <spotLight
+        ref={spotLightRef}
+        position={[0, 14.2, 0.5]}
+        color="#FF1E40"
+        angle={0.22}
+        penumbra={0.6}
+        distance={25}
+        intensity={0}
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        shadow-bias={-0.0005}
       />
-      {/* White rim right */}
-      <pointLight
-        position={[16, 7, -3]}
-        color="#DDD5C8"
-        intensity={0.40}
-        distance={30}
+      <object3D ref={spotTargetRef} position={[0, 1.25, 0]} />
+
+      {/* Wide floor halo glow */}
+      <spotLight
+        ref={haloLightRef}
+        position={[0, 10, 0]}
+        color="#DC143C"
+        angle={0.65}
+        penumbra={1.0}
+        distance={20}
+        intensity={0}
       />
 
-      {/* Warm amber from floor level — grounding warmth */}
+      {/* Secondary: Soft white/ivory rim lighting for concrete pillars */}
       <pointLight
-        position={[0, 0.8, 2]}
-        color="#6B2A0A"
-        intensity={0.7}
-        distance={10}
+        ref={rimLeftRef}
+        position={[-13, 8, -4]}
+        color="#E5DACB"
+        intensity={0}
+        distance={35}
+      />
+      <pointLight
+        ref={rimRightRef}
+        position={[13, 8, -4]}
+        color="#DDD4C8"
+        intensity={0}
+        distance={35}
       />
 
-      {/* Very faint blue-cold ceiling fill — contrast to red warmth, gives depth */}
+      {/* Ground warmth fill */}
       <pointLight
-        position={[0, 13, -6]}
-        color="#151522"
-        intensity={0.25}
-        distance={28}
+        position={[0, 0.9, 1.5]}
+        color="#52150D"
+        intensity={0.4}
+        distance={12}
       />
-
-      {/* Pillar accent lights — barely visible warm highlights */}
-      <pointLight position={[-6, 4, -8]} color="#3A1A08" intensity={0.4} distance={8} />
-      <pointLight position={[6, 4, -8]} color="#3A1A08" intensity={0.4} distance={8} />
     </group>
   );
 };
+

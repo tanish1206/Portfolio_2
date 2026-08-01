@@ -3,6 +3,7 @@
 import React, { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { WorldPhase } from "@/world/WorldController";
 
 /**
  * WorldAtmosphere.tsx
@@ -173,10 +174,85 @@ function SpotlightDust() {
   );
 }
 
+interface WorldAtmosphereProps {
+  phase?: WorldPhase;
+}
+
+// ─── Transitional Particle Tunnel ─────────────────────────────────────────────
+
+function ParticleTunnel({ phase }: { phase?: WorldPhase }) {
+  const ref = useRef<THREE.Points>(null);
+  const matRef = useRef<THREE.PointsMaterial>(null);
+
+  const { positions, velocities } = useMemo<{ positions: Float32Array; velocities: Float32Array }>(() => {
+    const count = 1200;
+    const pos = new Float32Array(count * 3);
+    const vel = new Float32Array(count * 3);
+
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 1.2 + Math.random() * 4.5;
+      pos[i * 3 + 0] = Math.cos(angle) * radius;
+      pos[i * 3 + 1] = Math.sin(angle) * radius + 1.5;
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 30;
+
+      vel[i * 3 + 0] = 0;
+      vel[i * 3 + 1] = 0;
+      vel[i * 3 + 2] = Math.random() * 0.4 + 0.2; // rushing backward relative to camera
+    }
+    return { positions: pos, velocities: vel };
+  }, []);
+
+  const geo = useMemo(() => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    return g;
+  }, [positions]);
+
+  useFrame((_, delta) => {
+    if (!ref.current || !matRef.current) return;
+    const isTransitional = phase === "FLY_THROUGH" || phase === "DARK_TRAVERSE";
+    const targetOpacity = isTransitional ? 0.75 : 0.0;
+
+    matRef.current.opacity = THREE.MathUtils.lerp(
+      matRef.current.opacity,
+      targetOpacity,
+      Math.min(delta * 4, 1)
+    );
+
+    if (matRef.current.opacity > 0.01) {
+      const posArr = ref.current.geometry.attributes.position.array as Float32Array;
+      const count = posArr.length / 3;
+      for (let i = 0; i < count; i++) {
+        posArr[i * 3 + 2] += velocities[i * 3 + 2];
+        if (posArr[i * 3 + 2] > 20) {
+          posArr[i * 3 + 2] = -15;
+        }
+      }
+      ref.current.geometry.attributes.position.needsUpdate = true;
+    }
+  });
+
+  return (
+    <points ref={ref} geometry={geo}>
+      <pointsMaterial
+        ref={matRef}
+        color="#FF3355"
+        size={0.035}
+        transparent
+        opacity={0}
+        depthWrite={false}
+        sizeAttenuation
+      />
+    </points>
+  );
+}
+
 // ─── Export ───────────────────────────────────────────────────────────────────
 
-export const WorldAtmosphere: React.FC = () => (
+export const WorldAtmosphere: React.FC<WorldAtmosphereProps> = ({ phase }) => (
   <group>
+    <ParticleTunnel phase={phase} />
     <FloatingDust />
     <GroundFog />
     <SpotlightDust />

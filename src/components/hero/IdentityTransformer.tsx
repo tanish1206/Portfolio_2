@@ -84,11 +84,11 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
           willChange: "transform, opacity",
         }}
         animate={{
-          scale: isDissolving ? 1.8 : isHovered ? 1.12 : isGlitching ? 1.2 : 1,
-          opacity: isDissolving ? 0 : isHovered ? 0.85 : 0.65,
+          scale: isDissolving ? 1.8 : isHovered ? 1.15 : isGlitching ? 1.2 : 1,
+          opacity: isDissolving ? 0 : isHovered ? 0.92 : 0.65,
           x: mouseOffset.x * 3,
         }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
+        transition={{ duration: 0.25, ease: "easeOut" }}
       />
 
       {/* Atmospheric Volumetric Dust Haze */}
@@ -99,18 +99,18 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
         className="portrait-vignette-mask relative z-10 w-[90vw] max-w-[650px] h-[55vh] md:h-[65vh] lg:h-[70vh] pointer-events-none flex items-center justify-center"
         style={{ willChange: "transform, opacity, filter" }}
         animate={{
-          scale: isDissolving ? 1.3 : isPrepped ? 1.15 : isHovered ? 1.02 : 1,
+          scale: isDissolving ? 1.3 : isPrepped ? 1.15 : isHovered ? 1.04 : 1,
           opacity: isDissolving ? 0 : 1,
-          y: isPrepped ? 0 : [0, -6, 0],
+          y: isPrepped ? 0 : isHovered ? [0, -8, 0] : [0, -5, 0],
           rotateX: mouseOffset.y * -1,
           rotateY: mouseOffset.x,
         }}
         transition={{
-          y: { duration: 6, repeat: Infinity, ease: "easeInOut" },
-          scale: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
+          y: { duration: isHovered ? 3.5 : 6, repeat: Infinity, ease: "easeInOut" },
+          scale: { duration: 0.3, ease: [0.16, 1, 0.3, 1] },
           opacity: { duration: 0.6 },
-          rotateX: { type: "spring", stiffness: 160, damping: 22 },
-          rotateY: { type: "spring", stiffness: 160, damping: 22 },
+          rotateX: { type: "spring", stiffness: 220, damping: 20 },
+          rotateY: { type: "spring", stiffness: 220, damping: 20 },
         }}
       >
         <AnimatePresence mode="wait">
@@ -119,7 +119,7 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
             initial={{ opacity: 0, scale: 1.28, filter: "blur(4px)" }}
             animate={{ opacity: 1, scale: 1.25, filter: "blur(0px)" }}
             exit={{ opacity: 0, scale: 1.22, filter: "blur(4px)" }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
             className="absolute inset-0 h-full w-full flex items-center justify-center pointer-events-none"
             style={{ willChange: "transform, opacity, filter" }}
           >

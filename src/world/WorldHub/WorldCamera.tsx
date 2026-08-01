@@ -30,32 +30,44 @@ type Keyframe = {
 };
 
 const KEYFRAMES: Record<WorldPhase, Keyframe> = {
-  // Parked during Hero — canvas exists but invisible behind Hero overlay
-  HERO:              { pos: [0, 1.8, 9.5],   look: [0, 1.5, 0],  fov: 60, speed: 0.05 },
+  // Parked during Hero — canvas exists behind overlay
+  HERO:              { pos: [0, 2.0, 12.0],  look: [0, 1.8, 0],  fov: 60, speed: 0.05 },
 
-  // Rushing through particle tunnel
-  FLY_THROUGH:       { pos: [0, 1.2, 5.5],   look: [0, 0.8, -4], fov: 78, speed: 0.60 },
+  // Phase 2: Rushing forward through darkness with particles surrounding camera
+  FLY_THROUGH:       { pos: [0, 1.4, 8.5],   look: [0, 1.2, -4], fov: 76, speed: 0.25 },
 
-  // Museum just appeared — camera at mid height, gallery revealed
-  MUSEUM_ENTER:      { pos: [0, 5.5, 11.0],  look: [0, 1.5, 0],  fov: 70, speed: 0.18 },
+  // Phase 3: Moving through darkness
+  DARK_TRAVERSE:     { pos: [0, 2.8, 14.0],  look: [0, 2.0, -6], fov: 72, speed: 0.18 },
 
-  // Slowly settle toward human eye level
-  MUSEUM_SETTLE:     { pos: [0, 2.8, 7.5],   look: [0, 1.4, 0],  fov: 62, speed: 0.10 },
+  // Phase 4: Faint fog materializes — elevated wide view
+  FOG_APPEAR:        { pos: [0, 4.2, 12.5],  look: [0, 1.8, 0],  fov: 68, speed: 0.14 },
 
-  // Resting position — compass visible, museum architecture fills frame
-  MUSEUM_IDLE:       { pos: [0, 2.0, 5.5],   look: [0, 1.3, 0],  fov: 56, speed: 0.03 },
+  // Phase 5: Concrete floor materializes — slow crane forward
+  FLOOR_REVEAL:      { pos: [0, 3.5, 10.0],  look: [0, 1.5, 0],  fov: 64, speed: 0.12 },
 
-  // Push in slightly toward compass
-  COMPASS_HOVER:     { pos: [0, 1.9, 4.4],   look: [0, 1.3, 0],  fov: 52, speed: 0.08 },
+  // Phase 6: Red spotlight switches on pedestal
+  SPOTLIGHT_ON:      { pos: [0, 2.8, 8.0],   look: [0, 1.4, 0],  fov: 60, speed: 0.10 },
+
+  // Phase 7-8: Concrete pillars & dust fade into view
+  PILLARS_FADE:      { pos: [0, 2.3, 6.6],   look: [0, 1.3, 0],  fov: 56, speed: 0.08 },
+
+  // Phase 9-10: Large architectural hall framing, camera slows down
+  MUSEUM_SETTLE:     { pos: [0, 2.0, 5.5],   look: [0, 1.25, 0], fov: 54, speed: 0.05 },
+
+  // Phase 11-12: Camera settles at eye level, compass illuminated
+  MUSEUM_IDLE:       { pos: [0, 2.0, 5.2],   look: [0, 1.25, 0], fov: 52, speed: 0.03 },
+
+  // Push in toward compass on hover
+  COMPASS_HOVER:     { pos: [0, 1.9, 4.4],   look: [0, 1.25, 0], fov: 48, speed: 0.08 },
 
   // Close dolly into compass as it transforms
-  COMPASS_TRANSFORM: { pos: [0, 1.5, 2.5],   look: [0, 1.2, 0],  fov: 46, speed: 0.30 },
+  COMPASS_TRANSFORM: { pos: [0, 1.5, 2.5],   look: [0, 1.2, 0],  fov: 44, speed: 0.20 },
 
   // Inside project world
   CAREER_COMPASS:    { pos: [0, 1.2, 3.5],   look: [0, 0.8, 0],  fov: 55, speed: 0.05 },
 
-  // Craning back out to museum
-  RETURNING:         { pos: [-2, 3.5, 8.5],  look: [0, 1.5, 0],  fov: 64, speed: 0.16 },
+  // Pull back out to hall
+  RETURNING:         { pos: [-2, 3.5, 8.5],  look: [0, 1.5, 0],  fov: 64, speed: 0.14 },
 };
 
 export const WorldCamera: React.FC<WorldCameraProps> = ({ phase }) => {

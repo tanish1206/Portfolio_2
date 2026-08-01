@@ -5,19 +5,23 @@
  */
 
 export type WorldPhase =
-  | "HERO"            // Hero section is showing, canvas is parked behind
-  | "FLY_THROUGH"     // Particle tunnel transition from Hero
-  | "MUSEUM_ENTER"    // Camera flies into the museum hall — slow crane down
-  | "MUSEUM_SETTLE"   // Camera slows, finds focal point on the Compass
-  | "MUSEUM_IDLE"     // Visitor inside the museum, Compass illuminated, everything else dark
-  | "COMPASS_HOVER"   // Visitor hovers over compass
-  | "COMPASS_TRANSFORM" // Compass disassembles into Career Compass world
-  | "CAREER_COMPASS"  // Inside Career Compass project world
-  | "RETURNING";      // Camera pulls back to museum after exiting project world
+  | "HERO"              // Hero section active
+  | "FLY_THROUGH"       // Particles surround camera (0 - 1.4s)
+  | "DARK_TRAVERSE"     // Camera rushing through dark void (1.4s - 2.8s)
+  | "FOG_APPEAR"        // Faint fog materializes (2.8s - 4.2s)
+  | "FLOOR_REVEAL"      // Concrete floor slowly materializes (4.2s - 5.6s)
+  | "SPOTLIGHT_ON"      // Red spotlight switches on (5.6s - 7.0s)
+  | "PILLARS_FADE"      // Concrete pillars & dust fade into view (7.0s - 8.5s)
+  | "MUSEUM_SETTLE"     // Large hall framed, camera slows toward compass (8.5s - 10.0s)
+  | "MUSEUM_IDLE"       // Settled architectural exhibition room
+  | "COMPASS_HOVER"     // Visitor hover over compass
+  | "COMPASS_TRANSFORM" // Disassemble animation into project world
+  | "CAREER_COMPASS"    // Inside Career Compass world
+  | "RETURNING";        // Camera pull-back
 
 export interface WorldState {
   phase: WorldPhase;
-  unlockedExhibits: number;      // Starts at 1 (only compass). Grows as visitor explores.
+  unlockedExhibits: number;
   hoveredExhibitId: string | null;
   activeProjectId: string | null;
 }
@@ -55,23 +59,14 @@ class WorldControllerClass {
     this.state.phase = "FLY_THROUGH";
     this.notify();
 
-    // After particle tunnel (~2s), begin museum reveal
-    setTimeout(() => {
-      this.state.phase = "MUSEUM_ENTER";
-      this.notify();
-    }, 2000);
-
-    // After crane-in (~3s more), begin settle
-    setTimeout(() => {
-      this.state.phase = "MUSEUM_SETTLE";
-      this.notify();
-    }, 5000);
-
-    // Final idle settle — visitor is free to explore
-    setTimeout(() => {
-      this.state.phase = "MUSEUM_IDLE";
-      this.notify();
-    }, 8200);
+    // Cinematic sequence timeline
+    setTimeout(() => { this.state.phase = "DARK_TRAVERSE"; this.notify(); }, 1400);
+    setTimeout(() => { this.state.phase = "FOG_APPEAR"; this.notify(); }, 2800);
+    setTimeout(() => { this.state.phase = "FLOOR_REVEAL"; this.notify(); }, 4200);
+    setTimeout(() => { this.state.phase = "SPOTLIGHT_ON"; this.notify(); }, 5600);
+    setTimeout(() => { this.state.phase = "PILLARS_FADE"; this.notify(); }, 7000);
+    setTimeout(() => { this.state.phase = "MUSEUM_SETTLE"; this.notify(); }, 8500);
+    setTimeout(() => { this.state.phase = "MUSEUM_IDLE"; this.notify(); }, 10000);
   }
 
   setHovered(id: string | null) {

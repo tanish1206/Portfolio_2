@@ -28,13 +28,12 @@ function SceneContent({ state }: { state: WorldState }) {
   return (
     <>
       <WorldCamera phase={state.phase} />
-      <WorldLighting compassUnlocked={state.unlockedExhibits >= 1} />
-      <WorldAtmosphere />
+      <WorldLighting phase={state.phase} compassUnlocked={state.unlockedExhibits >= 1} />
+      <WorldAtmosphere phase={state.phase} />
 
       {museumVisible && (
         <Suspense fallback={null}>
-          <Museum />
-          <CompassPedestal />
+          <Museum phase={state.phase} />
           <CompassModel
             phase={state.phase}
             onHover={(hovered) => WorldController.setHovered(hovered ? "compass" : null)}

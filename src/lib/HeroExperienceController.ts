@@ -79,8 +79,18 @@ class HeroExperienceControllerClass {
     if (this.isHovered) return;
     this.isHovered = true;
 
-    // Immediately advance photo on hover entry (1 hover = 1 photo change)
-    this.advanceIdentity();
+    // Clear existing timer if any
+    if (this.hoverTimer) {
+      clearTimeout(this.hoverTimer);
+      this.hoverTimer = null;
+    }
+
+    // Immediately acknowledge hover state; schedule photo advance after 350ms
+    this.hoverTimer = setTimeout(() => {
+      if (this.isHovered) {
+        this.advanceIdentity();
+      }
+    }, 350);
   }
 
   public onHoverLeave() {
