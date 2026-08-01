@@ -9,33 +9,27 @@ import { WorldHubScene } from "@/world/WorldHub/WorldHubScene";
 import { WorldController, WorldState } from "@/world/WorldController";
 import { CompassOverlay } from "@/world/Compass/CompassOverlay";
 
-/**
- * page.tsx — The entire experience in one fixed viewport.
- *
- * Layer order (z-index):
- *   0  — WorldHubScene (R3F Canvas) — fills full viewport, always rendering
- *   10 — HeroSection — fades out on WORLD_TRANSITION
- *   30 — CompassOverlay — fades in only when inside Career Compass world
- */
-
 function PortfolioContent() {
   const { heroState } = useCinematic();
   const [worldState, setWorldState] = useState<WorldState>(WorldController.getState());
 
-  // Subscribe to WorldController
   useEffect(() => {
     return WorldController.subscribe(setWorldState);
   }, []);
 
-  // Bridge: when Hero fires WORLD_TRANSITION → tell WorldController
+  // Sync Hero transition trigger directly to WorldController
   useEffect(() => {
-    if (heroState === "WORLD_TRANSITION") {
-      WorldController.beginHeroExit();
+    if (heroState === "WORLD_TRANSITION" || heroState === "WORLD") {
+      if (worldState.phase === "HERO") {
+        WorldController.beginHeroExit();
+      }
     }
-    if (heroState === "DISCOVERY" || heroState === "BOOT") {
-      WorldController.resetToHero();
+    if (heroState === "DISCOVERY" || heroState === "BOOT" || heroState === "IDLE") {
+      if (worldState.phase !== "HERO") {
+        WorldController.resetToHero();
+      }
     }
-  }, [heroState]);
+  }, [heroState, worldState.phase]);
 
   const heroVisible =
     worldState.phase === "HERO" ||
@@ -44,16 +38,15 @@ function PortfolioContent() {
   const compassOverlayVisible = worldState.phase === "CAREER_COMPASS";
 
   return (
-    // Fixed root — fills the entire viewport. No scroll.
     <div className="fixed inset-0 overflow-hidden bg-[#050505]">
       <GlobalCinematicController />
 
-      {/* ── Layer 0: 3D World Hub Canvas (always rendering) ── */}
+      {/* Layer 0: Persistent 3D React Three Fiber World Hub Canvas */}
       <div className="absolute inset-0 z-0">
         <WorldHubScene />
       </div>
 
-      {/* ── Layer 10: Hero Overlay (fades out as visitor enters museum) ── */}
+      {/* Layer 10: Hero Section Overlay */}
       <AnimatePresence>
         {heroVisible && (
           <motion.div
@@ -63,7 +56,7 @@ function PortfolioContent() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{
-              duration: worldState.phase === "FLY_THROUGH" ? 1.6 : 0.4,
+              duration: worldState.phase === "FLY_THROUGH" ? 1.5 : 0.4,
               ease: "easeInOut",
             }}
           >
@@ -72,7 +65,7 @@ function PortfolioContent() {
         )}
       </AnimatePresence>
 
-      {/* ── Layer 30: Career Compass Spatial HUD ── */}
+      {/* Layer 30: Career Compass Spatial HUD */}
       <AnimatePresence>
         {compassOverlayVisible && (
           <motion.div

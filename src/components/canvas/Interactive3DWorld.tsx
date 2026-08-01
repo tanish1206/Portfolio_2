@@ -1,12 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Canvas } from "@react-three/fiber";
-import { CinematicCameraController } from "@/cinematic/controllers/CameraController";
-import { LightingController } from "@/cinematic/controllers/LightingController";
-import { WorldHubScene } from "@/cinematic/WorldHub/WorldHubScene";
-import { CareerCompass3DCanvasScene } from "@/cinematic/Objects/CareerCompass/CareerCompassWorld";
+import { WorldHubScene } from "@/world/WorldHub/WorldHubScene";
 import { WorldHubController, WorldHubState } from "@/cinematic/controllers/WorldHubController";
+import { CareerCompass3DCanvasScene } from "@/cinematic/Objects/CareerCompass/CareerCompassWorld";
 import { FloatingObject } from "@/data/objects";
 
 interface Interactive3DWorldProps {
@@ -14,9 +11,7 @@ interface Interactive3DWorldProps {
   onSelectObject: (obj: FloatingObject) => void;
 }
 
-export const Interactive3DWorld: React.FC<Interactive3DWorldProps> = ({
-  scrollProgress,
-}) => {
+export const Interactive3DWorld: React.FC<Interactive3DWorldProps> = () => {
   const [hubState, setHubState] = useState<WorldHubState>(WorldHubController.getState());
 
   useEffect(() => {
@@ -28,24 +23,18 @@ export const Interactive3DWorld: React.FC<Interactive3DWorldProps> = ({
 
   return (
     <div className="pointer-events-auto fixed inset-0 z-0 h-full w-full bg-[#050505]">
-      <Canvas
-        camera={{ position: [0, 0, 8], fov: 60 }}
-        gl={{ antialias: true, alpha: true }}
-      >
-        {/* Cinematographer Camera Controller */}
-        <CinematicCameraController hubState={hubState} scrollProgress={scrollProgress} />
+      {/* 
+        Self-contained React Three Fiber World Hub 
+        Includes its own Canvas, WorldCamera, WorldLighting, WorldAtmosphere, Museum, & CompassModel
+      */}
+      <WorldHubScene />
 
-        {/* Dynamic Architectural Crimson Spotlight System */}
-        <LightingController hubState={hubState} />
-
-        {/* Underground Museum World Hub Scene */}
-        <WorldHubScene hubState={hubState} />
-
-        {/* Career Compass 3D Reality Scene */}
-        {hubState.viewMode === "CAREER_COMPASS_WORLD" && (
-          <CareerCompass3DCanvasScene onSelectNode={() => {}} />
-        )}
-      </Canvas>
+      {/* Spatial Career Compass Sub-Scene Overlay when active */}
+      {hubState.viewMode === "CAREER_COMPASS_WORLD" && (
+        <div className="absolute inset-0 pointer-events-none z-10">
+          {/* Spatial UI overlay handled inside page.tsx */}
+        </div>
+      )}
     </div>
   );
 };
