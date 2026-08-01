@@ -23,9 +23,13 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
   const currentIdentity = IDENTITIES[currentIndex];
 
   const isFreezing = phase === "HERO_FREEZE" || phase === "HERO_PUSH";
-  const isDissolving = phase === "PARTICLE_DISSOLVE" || phase === "FLY_THROUGH" || phase === "WORLD_ASSEMBLE" || phase === "WORLD_ACTIVE";
+  const isDissolving =
+    phase === "PARTICLE_DISSOLVE" ||
+    phase === "FLY_THROUGH" ||
+    phase === "WORLD_ASSEMBLE" ||
+    phase === "WORLD_ACTIVE";
 
-  // Mouse tilt tracking strictly limited to max 2.5 degrees for luxury feel
+  // Restrained cursor tracking: maximum 2 degrees movement for luxury feel
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current || isFreezing || isDissolving) return;
     const rect = containerRef.current.getBoundingClientRect();
@@ -36,8 +40,8 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
     const offsetY = (e.clientY - centerY) / (rect.height / 2);
 
     setMouseOffset({
-      x: Math.max(-2.5, Math.min(2.5, offsetX * 2.5)),
-      y: Math.max(-2.5, Math.min(2.5, offsetY * 2.5)),
+      x: Math.max(-2, Math.min(2, offsetX * 2)),
+      y: Math.max(-2, Math.min(2, offsetY * 2)),
     });
   };
 
@@ -46,7 +50,7 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
     if (hoverTimerRef.current) clearInterval(hoverTimerRef.current);
   };
 
-  // Hover cycles identities: Builder -> Hackathon -> Full Stack -> AI -> Founder -> Builder
+  // Hover cycles identities every 3s automatically while hovered or on click
   const handleMouseEnter = () => {
     if (isFreezing || isDissolving) return;
     triggerTransformation();
@@ -54,7 +58,12 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
     if (hoverTimerRef.current) clearInterval(hoverTimerRef.current);
     hoverTimerRef.current = setInterval(() => {
       triggerTransformation();
-    }, 2800);
+    }, 3000);
+  };
+
+  const handleClick = () => {
+    if (isFreezing || isDissolving || isGlitching) return;
+    triggerTransformation();
   };
 
   const triggerTransformation = () => {
@@ -65,14 +74,18 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
         if (onIdentityChange) onIdentityChange(IDENTITIES[next]);
         return next;
       });
-    }, 400); // Mid-glitch image swap at 400ms
+    }, 400); // Mid-glitch image swap
 
     setTimeout(() => {
       setIsGlitching(false);
-    }, 1000); // 1.0s total transformation complete
+    }, 1000); // 1.0s complete transformation
   };
 
+  // Notify parent of initial identity on mount
   useEffect(() => {
+    if (onIdentityChange) {
+      onIdentityChange(IDENTITIES[0]);
+    }
     return () => {
       if (hoverTimerRef.current) clearInterval(hoverTimerRef.current);
     };
@@ -84,46 +97,51 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className="interactive-hover group relative flex cursor-pointer flex-col items-center justify-center"
+      onClick={handleClick}
+      className="interactive-hover group relative flex cursor-pointer flex-col items-center justify-center select-none"
     >
-      {/* Overhead Soft Focused Crimson Spotlight Glow */}
+      {/* Overhead Soft Focused Crimson Spotlight Beam */}
       <motion.div
-        className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 h-[380px] w-[380px] rounded-full blur-3xl opacity-40"
+        className="pointer-events-none absolute -top-36 left-1/2 -translate-x-1/2 h-[480px] w-[480px] rounded-full blur-[90px] opacity-50 z-0"
         style={{
-          background: `radial-gradient(circle at center, #FF1E40 0%, #DC143C 35%, transparent 70%)`,
+          background: `radial-gradient(circle at center, #FF1E40 0%, #DC143C 40%, rgba(220,20,60,0.1) 70%, transparent 85%)`,
         }}
         animate={{
-          scale: isDissolving ? 1.8 : isGlitching ? 1.15 : 1,
-          opacity: isDissolving ? 0 : 0.4,
+          scale: isDissolving ? 1.8 : isGlitching ? 1.2 : 1,
+          opacity: isDissolving ? 0 : 0.5,
+          x: mouseOffset.x * 4 - 240,
         }}
-        transition={{ duration: 0.8 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
       />
 
-      {/* Borderless Portrait Container with Micro-Breathing & Restrained 2-3° Tilt */}
+      {/* Atmospheric Haze Layer */}
+      <div className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 h-[350px] w-[350px] rounded-full blur-[60px] opacity-25 bg-gradient-to-b from-[#FF1E40] to-transparent z-0" />
+
+      {/* Borderless Portrait Container with Micro-Breathing & Restrained 2° Tilt */}
       <motion.div
-        className="portrait-vignette-mask relative h-[360px] w-[280px] overflow-hidden md:h-[440px] md:w-[340px]"
+        className="portrait-vignette-mask relative z-10 h-[380px] w-[290px] overflow-hidden md:h-[480px] md:w-[370px] lg:h-[520px] lg:w-[400px]"
         animate={{
           scale: isDissolving ? 1.25 : phase === "HERO_PUSH" ? 1.1 : 1,
           opacity: isDissolving ? 0 : 1,
-          y: isFreezing ? 0 : [0, -4, 0],
+          y: isFreezing ? 0 : [0, -6, 0],
           rotateX: mouseOffset.y * -1,
           rotateY: mouseOffset.x,
         }}
         transition={{
-          y: { duration: 4, repeat: Infinity, ease: "easeInOut" },
+          y: { duration: 5, repeat: Infinity, ease: "easeInOut" },
           scale: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
           opacity: { duration: 0.6 },
-          rotateX: { type: "spring", stiffness: 200, damping: 25 },
-          rotateY: { type: "spring", stiffness: 200, damping: 25 },
+          rotateX: { type: "spring", stiffness: 180, damping: 24 },
+          rotateY: { type: "spring", stiffness: 180, damping: 24 },
         }}
       >
         {/* Active Identity Image */}
         <AnimatePresence mode="wait">
           <motion.div
             key={currentIdentity.id}
-            initial={{ opacity: 0, scale: 1.03 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.97 }}
+            initial={{ opacity: 0, scale: 1.04, filter: "blur(4px)" }}
+            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0, scale: 0.96, filter: "blur(4px)" }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="absolute inset-0 h-full w-full"
           >
@@ -131,25 +149,40 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
               src={currentIdentity.image}
               alt={currentIdentity.title}
               fill
-              sizes="(max-width: 768px) 280px, 340px"
+              sizes="(max-width: 768px) 290px, (max-width: 1024px) 370px, 400px"
               priority
-              className="object-cover object-center filter contrast-[1.08] brightness-95"
+              className="object-cover object-top filter contrast-[1.1] brightness-[0.92] saturate-[0.95]"
             />
           </motion.div>
         </AnimatePresence>
 
-        {/* Cinematic Glitch Overlay in Deep Crimson / Charcoal */}
+        {/* Preload Next & Previous Identity Images */}
+        <div className="hidden">
+          {IDENTITIES.map((identity) => (
+            <Image
+              key={identity.id}
+              src={identity.image}
+              alt={identity.title}
+              width={400}
+              height={520}
+              priority={false}
+            />
+          ))}
+        </div>
+
+        {/* Cinematic Glitch Overlay in Crimson / Soft Charcoal */}
         {isGlitching && (
-          <div className="animate-glitch pointer-events-none absolute inset-0 z-20 overflow-hidden bg-accent-crimson/10 backdrop-blur-[2px]">
-            <div className="absolute inset-0 bg-[radial-gradient(#FF1E40_1px,transparent_1px)] [background-size:12px_12px] opacity-40" />
-            <div className="absolute top-1/3 h-[2px] w-full bg-white/70 shadow-[0_0_8px_#fff]" />
-            <div className="absolute top-2/3 h-[1px] w-full bg-accent-crimson shadow-[0_0_8px_#DC143C]" />
+          <div className="animate-glitch pointer-events-none absolute inset-0 z-20 overflow-hidden bg-accent-crimson/15 backdrop-blur-[2px]">
+            <div className="absolute inset-0 bg-[radial-gradient(#FF1E40_1px,transparent_1px)] [background-size:10px_10px] opacity-50" />
+            <div className="absolute top-1/3 h-[2px] w-full bg-white/80 shadow-[0_0_12px_#fff]" />
+            <div className="absolute top-2/3 h-[1px] w-full bg-accent-crimson shadow-[0_0_10px_#DC143C]" />
           </div>
         )}
 
-        {/* Soft Feathered Vignette Overlay to blend seamlessly into darkness */}
-        <div className="pointer-events-none absolute inset-0 bg-radial-vignette opacity-90" />
+        {/* Soft Feathered Vignette & Light Wrap Overlay */}
+        <div className="pointer-events-none absolute inset-0 bg-radial-vignette opacity-95" />
       </motion.div>
     </div>
   );
 };
+
