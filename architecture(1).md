@@ -1,28 +1,20 @@
-# Architecture
+# Architecture Specification
 
 ## Vision
-Build an interactive cinematic web experience instead of a traditional portfolio.
+An interactive cinematic film experience (not a traditional portfolio website).
 
-## Stack
-- Next.js
-- React
-- Tailwind CSS
-- GSAP
-- Framer Motion
-- Lenis
-- React Three Fiber (later)
+## Tech Stack
+- Next.js 14 (App Router)
+- React 18 & TypeScript
+- Tailwind CSS (Crimson & Charcoal Design Tokens)
+- GSAP (Cinematic Timelines & Camera Transitions)
+- Framer Motion (Micro-interactions)
+- React Three Fiber / Three.js (WebGL 3D Interactive World & Particle Dissolve Shaders)
 
-## Flow
-Hero → Cinematic Transition → Interactive World → Project Experiences → Achievement Hall → Contact
+## Controller Architecture
+- **GlobalCinematicController**: Coordinates Hero timeline, Hero → World transition, camera orchestration, scene transitions, and global animation state.
+- **HeroSection**: Minimalist typography, overhead soft crimson spotlight, seamless borderless portrait blending into black, restrained 2-3° cursor tilt.
+- **Interactive3DWorld**: 3D Canvas rendering atmospheric dust particles, camera fly-through, and physical exhibit objects.
 
-## Components
-- HeroTransformation
-- FloatingObjects
-- ProjectWorld
-- AchievementHall
-- ContactScene
-
-## Animation Ownership
-- GSAP: cinematic timelines
-- Framer Motion: UI animations
-- R3F: 3D objects & particles
+## User Flow
+Hero → Scroll Trigger → Freeze & Focus → Crimson Fade → Particle Dissolve → Camera Fly-Through → Dark Architectural 3D World → Exhibit Discovery → Contact Experience
