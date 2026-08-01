@@ -15,7 +15,7 @@ export const IDENTITIES: Identity[] = [
     subtitle: "Architecting systems from absolute zero with blueprint precision.",
     quote: "Code is raw material; software is the structure.",
     image: "/portraits/builder.png",
-    accentColor: "#00E5FF",
+    accentColor: "#DC143C",
     tags: ["Systems Architecture", "Product Design", "Scalability", "Clean Code"],
   },
   {
@@ -24,7 +24,7 @@ export const IDENTITIES: Identity[] = [
     subtitle: "Turning complex challenges into working software in 24 hours.",
     quote: "Speed is the catalyst of breakthrough innovation.",
     image: "/portraits/hackathon.png",
-    accentColor: "#FF3366",
+    accentColor: "#FF1E40",
     tags: ["National Wins", "Rapid Prototyping", "Pitching", "High Pressure"],
   },
   {
@@ -33,7 +33,7 @@ export const IDENTITIES: Identity[] = [
     subtitle: "Bridging frontend elegance with robust distributed backend pipelines.",
     quote: "Every interface is a promise; every backend keeps it.",
     image: "/portraits/fullstack.png",
-    accentColor: "#7000FF",
+    accentColor: "#E60026",
     tags: ["Next.js", "Node.js", "Distributed Systems", "Database Design"],
   },
   {
@@ -42,16 +42,16 @@ export const IDENTITIES: Identity[] = [
     subtitle: "Training models, fine-tuning agents, and crafting intelligent workflows.",
     quote: "Intelligence is not simulated—it's engineered.",
     image: "/portraits/ai_engineer.png",
-    accentColor: "#00FF9D",
+    accentColor: "#FF2A4B",
     tags: ["LLM Agents", "PyTorch", "RAG Systems", "Predictive Analytics"],
   },
   {
     id: "founder",
     title: "Founder",
-    subtitle: "Building complete platforms with market product-market fit.",
+    subtitle: "Building complete platforms with product-market fit.",
     quote: "Engineers build products; founders build solutions that matter.",
     image: "/portraits/founder.png",
-    accentColor: "#FFD700",
+    accentColor: "#D91438",
     tags: ["Product Vision", "0-to-1 Growth", "Strategy", "User Impact"],
   },
 ];

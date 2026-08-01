@@ -40,20 +40,26 @@ html, body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #00E5FF;
+  background: #DC143C;
 }
 
 /* Glassmorphism utility */
 .glass-panel {
-  background: rgba(17, 17, 17, 0.75);
+  background: rgba(17, 17, 17, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .glass-panel-hover:hover {
-  border-color: rgba(0, 229, 255, 0.3);
-  box-shadow: 0 8px 32px 0 rgba(0, 229, 255, 0.1);
+  border-color: rgba(220, 20, 60, 0.4);
+  box-shadow: 0 8px 32px 0 rgba(220, 20, 60, 0.15);
+}
+
+/* Radial Vignette & Mask for Borderless Hero Portrait */
+.portrait-vignette-mask {
+  mask-image: radial-gradient(circle at center, rgba(0,0,0,1) 55%, rgba(0,0,0,0) 98%);
+  -webkit-mask-image: radial-gradient(circle at center, rgba(0,0,0,1) 55%, rgba(0,0,0,0) 98%);
 }
 
 /* Glitch animation effects */
