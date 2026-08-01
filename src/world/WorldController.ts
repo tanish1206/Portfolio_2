@@ -5,15 +5,16 @@
  */
 
 export type WorldPhase =
-  | "HERO"              // Hero section active
-  | "FLY_THROUGH"       // Particles surround camera (0 - 1.4s)
-  | "DARK_TRAVERSE"     // Camera rushing through dark void (1.4s - 2.8s)
-  | "FOG_APPEAR"        // Faint fog materializes (2.8s - 4.2s)
-  | "FLOOR_REVEAL"      // Concrete floor slowly materializes (4.2s - 5.6s)
-  | "SPOTLIGHT_ON"      // Red spotlight switches on (5.6s - 7.0s)
-  | "PILLARS_FADE"      // Concrete pillars & dust fade into view (7.0s - 8.5s)
-  | "MUSEUM_SETTLE"     // Large hall framed, camera slows toward compass (8.5s - 10.0s)
-  | "MUSEUM_IDLE"       // Settled architectural exhibition room
+  | "HERO"              // Hero section active (0% progress)
+  | "FLY_THROUGH"       // Particles & dark tunnel (0% - 10%)
+  | "FLOOR_REVEAL"      // Floor assembling from particles outward (10% - 20%)
+  | "PILLARS_FADE"      // Concrete pillars physically growing upward (20% - 35%)
+  | "WALLS_BEAMS"       // Concrete walls extrude & steel beams lower (35% - 50%)
+  | "SPOTLIGHT_ON"      // Red spotlights ignite sequentially (50% - 65%)
+  | "ATMOSPHERE_EMERGENCE" // Volumetric fog & floating dust illuminate (65% - 80%)
+  | "PEDESTAL_EMERGENCE"// Circular stone pedestal mechanically rises (80% - 90%)
+  | "COMPASS_ASSEMBLY"  // Mechanical brass compass fragments fly & assemble (90% - 99%)
+  | "MUSEUM_IDLE"       // World construction complete (100%), pure architectural silence
   | "COMPASS_HOVER"     // Visitor hover over compass
   | "COMPASS_TRANSFORM" // Disassemble animation into project world
   | "CAREER_COMPASS"    // Inside Career Compass world
@@ -24,6 +25,7 @@ export interface WorldState {
   unlockedExhibits: number;
   hoveredExhibitId: string | null;
   activeProjectId: string | null;
+  constructionProgress: number; // 0.0 to 1.0 normalized scroll progress
 }
 
 type WorldListener = (state: WorldState) => void;
@@ -34,6 +36,7 @@ class WorldControllerClass {
     unlockedExhibits: 1,
     hoveredExhibitId: null,
     activeProjectId: null,
+    constructionProgress: 0,
   };
 
   private listeners = new Set<WorldListener>();
@@ -53,20 +56,48 @@ class WorldControllerClass {
     return { ...this.state };
   }
 
-  /** Called from HeroExperienceController when WORLD_TRANSITION fires */
-  beginHeroExit() {
-    if (this.state.phase !== "HERO") return;
-    this.state.phase = "FLY_THROUGH";
-    this.notify();
+  /**
+   * Directly updates normalized construction progress (0.0 to 1.0)
+   * mapped from scroll movement.
+   */
+  setConstructionProgress(progress: number) {
+    const p = Math.max(0, Math.min(1, progress));
+    this.state.constructionProgress = p;
 
-    // Cinematic sequence timeline
-    setTimeout(() => { this.state.phase = "DARK_TRAVERSE"; this.notify(); }, 1400);
-    setTimeout(() => { this.state.phase = "FOG_APPEAR"; this.notify(); }, 2800);
-    setTimeout(() => { this.state.phase = "FLOOR_REVEAL"; this.notify(); }, 4200);
-    setTimeout(() => { this.state.phase = "SPOTLIGHT_ON"; this.notify(); }, 5600);
-    setTimeout(() => { this.state.phase = "PILLARS_FADE"; this.notify(); }, 7000);
-    setTimeout(() => { this.state.phase = "MUSEUM_SETTLE"; this.notify(); }, 8500);
-    setTimeout(() => { this.state.phase = "MUSEUM_IDLE"; this.notify(); }, 10000);
+    if (this.state.phase === "CAREER_COMPASS" || this.state.phase === "COMPASS_TRANSFORM") {
+      this.notify();
+      return;
+    }
+
+    if (p === 0) {
+      this.state.phase = "HERO";
+    } else if (p <= 0.10) {
+      this.state.phase = "FLY_THROUGH";
+    } else if (p <= 0.20) {
+      this.state.phase = "FLOOR_REVEAL";
+    } else if (p <= 0.35) {
+      this.state.phase = "PILLARS_FADE";
+    } else if (p <= 0.50) {
+      this.state.phase = "WALLS_BEAMS";
+    } else if (p <= 0.65) {
+      this.state.phase = "SPOTLIGHT_ON";
+    } else if (p <= 0.80) {
+      this.state.phase = "ATMOSPHERE_EMERGENCE";
+    } else if (p <= 0.90) {
+      this.state.phase = "PEDESTAL_EMERGENCE";
+    } else if (p < 1.00) {
+      this.state.phase = "COMPASS_ASSEMBLY";
+    } else {
+      this.state.phase = "MUSEUM_IDLE";
+    }
+
+    this.notify();
+  }
+
+  /** Called when user triggers auto-scroll or hero transition action */
+  beginHeroExit() {
+    if (this.state.constructionProgress > 0) return;
+    this.setConstructionProgress(0.01);
   }
 
   setHovered(id: string | null) {
@@ -91,7 +122,6 @@ class WorldControllerClass {
     this.state.activeProjectId = null;
     this.notify();
 
-    // Unlock next exhibit when returning
     if (this.state.unlockedExhibits < 7) {
       this.state.unlockedExhibits += 1;
     }
@@ -108,6 +138,7 @@ class WorldControllerClass {
       unlockedExhibits: 1,
       hoveredExhibitId: null,
       activeProjectId: null,
+      constructionProgress: 0,
     };
     this.notify();
   }

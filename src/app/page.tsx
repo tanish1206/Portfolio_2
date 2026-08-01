@@ -17,48 +17,59 @@ function PortfolioContent() {
     return WorldController.subscribe(setWorldState);
   }, []);
 
-  // Sync Hero transition trigger directly to WorldController
+  // Listen to window scroll and map normalized scroll position to construction progress (0.0 to 1.0)
+  useEffect(() => {
+    const handleScroll = () => {
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      if (maxScroll <= 0) return;
+      const progress = Math.min(1, Math.max(0, window.scrollY / maxScroll));
+      WorldController.setConstructionProgress(progress);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll(); // Initial check
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Sync Hero state trigger to WorldController
   useEffect(() => {
     if (heroState === "WORLD_TRANSITION" || heroState === "WORLD") {
-      if (worldState.phase === "HERO") {
+      if (worldState.constructionProgress === 0) {
         WorldController.beginHeroExit();
       }
     }
     if (heroState === "DISCOVERY" || heroState === "BOOT" || heroState === "IDLE") {
-      if (worldState.phase !== "HERO") {
+      if (worldState.constructionProgress > 0 && worldState.phase === "HERO") {
         WorldController.resetToHero();
       }
     }
-  }, [heroState, worldState.phase]);
+  }, [heroState, worldState.constructionProgress, worldState.phase]);
 
-  const heroVisible =
-    worldState.phase === "HERO" ||
-    worldState.phase === "FLY_THROUGH";
+  // Hero overlay dissolves during initial 12% of scroll construction
+  const heroVisible = worldState.constructionProgress <= 0.12 && worldState.phase !== "CAREER_COMPASS";
 
+  // Career Compass Spatial HUD only inside Career Compass world phase
   const compassOverlayVisible = worldState.phase === "CAREER_COMPASS";
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-[#050505]">
+    <div className="relative min-h-[600vh] w-full bg-[#050505] selection:bg-accent-crimson selection:text-white">
       <GlobalCinematicController />
 
-      {/* Layer 0: Persistent 3D React Three Fiber World Hub Canvas */}
-      <div className="absolute inset-0 z-0">
+      {/* Layer 0: Persistent 3D R3F Canvas Fixed to Viewport */}
+      <div className="fixed inset-0 z-0">
         <WorldHubScene />
       </div>
 
-      {/* Layer 10: Hero Section Overlay */}
+      {/* Layer 10: Hero Section Overlay (Dissolves as scroll construction begins) */}
       <AnimatePresence>
         {heroVisible && (
           <motion.div
             key="hero-overlay"
-            className="absolute inset-0 z-10"
+            className="fixed inset-0 z-10 pointer-events-auto"
             initial={{ opacity: 1 }}
-            animate={{ opacity: 1 }}
+            animate={{ opacity: 1 - (worldState.constructionProgress / 0.12) }}
             exit={{ opacity: 0 }}
-            transition={{
-              duration: worldState.phase === "FLY_THROUGH" ? 1.5 : 0.4,
-              ease: "easeInOut",
-            }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
           >
             <HeroSection />
           </motion.div>
@@ -70,7 +81,7 @@ function PortfolioContent() {
         {compassOverlayVisible && (
           <motion.div
             key="compass-overlay"
-            className="absolute inset-0 z-30 pointer-events-none"
+            className="fixed inset-0 z-30 pointer-events-none"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

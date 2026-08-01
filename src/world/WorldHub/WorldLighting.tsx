@@ -85,10 +85,11 @@ function BreathingSpotlight({
 
 interface WorldLightingProps {
   phase: WorldPhase;
+  progress?: number;
   compassUnlocked?: boolean;
 }
 
-export const WorldLighting: React.FC<WorldLightingProps> = ({ phase }) => {
+export const WorldLighting: React.FC<WorldLightingProps> = ({ phase, progress = 0 }) => {
   const spotLightRef = useRef<THREE.SpotLight>(null);
   const haloLightRef = useRef<THREE.SpotLight>(null);
   const spotTargetRef = useRef<THREE.Object3D>(null);
@@ -98,41 +99,25 @@ export const WorldLighting: React.FC<WorldLightingProps> = ({ phase }) => {
 
   useFrame(({ clock }, delta) => {
     const t = clock.getElapsedTime();
-    const lerpSpeed = Math.min(delta * 3, 1);
+    const p = progress;
+    const lerpSpeed = Math.min(delta * 4, 1);
 
-    // Primary spotlight state
-    let targetSpotIntensity = 0;
-    if (
-      phase === "SPOTLIGHT_ON" ||
-      phase === "PILLARS_FADE" ||
-      phase === "MUSEUM_SETTLE" ||
-      phase === "MUSEUM_IDLE" ||
-      phase === "COMPASS_HOVER" ||
-      phase === "COMPASS_TRANSFORM" ||
-      phase === "CAREER_COMPASS" ||
-      phase === "RETURNING"
-    ) {
-      targetSpotIntensity = 10.0 + Math.sin(t * 0.45) * 0.6;
-    }
+    // 1. Primary Spotlight Ignition (50% to 65% progress)
+    const spotProg = Math.min(1, Math.max(0, (p - 0.50) / 0.08));
+    const baseSpot = spotProg * 11.0;
+    const targetSpotIntensity = baseSpot > 0 ? baseSpot + Math.sin(t * 0.45) * 0.6 : 0;
 
-    // Halo & rim lighting state
-    let targetRimIntensity = 0;
-    if (
-      phase === "PILLARS_FADE" ||
-      phase === "MUSEUM_SETTLE" ||
-      phase === "MUSEUM_IDLE" ||
-      phase === "COMPASS_HOVER" ||
-      phase === "COMPASS_TRANSFORM" ||
-      phase === "CAREER_COMPASS" ||
-      phase === "RETURNING"
-    ) {
-      targetRimIntensity = 0.55;
-    }
+    // 2. Wide Crimson Halo Ignition (55% to 65% progress)
+    const haloProg = Math.min(1, Math.max(0, (p - 0.55) / 0.08));
+    const targetHaloIntensity = haloProg * 4.5;
 
-    // Ambient light state
-    let targetAmbient = 0.05;
-    if (phase === "FOG_APPEAR" || phase === "FLOOR_REVEAL") targetAmbient = 0.15;
-    else if (phase !== "HERO" && phase !== "FLY_THROUGH" && phase !== "DARK_TRAVERSE") targetAmbient = 0.22;
+    // 3. Secondary Soft Ivory Rim Lights (60% to 70% progress)
+    const rimProg = Math.min(1, Math.max(0, (p - 0.60) / 0.08));
+    const targetRimIntensity = rimProg * 0.55;
+
+    // 4. Ambient Warm Fill (20% to 65% progress)
+    const ambProg = Math.min(1, Math.max(0, (p - 0.20) / 0.45));
+    const targetAmbient = 0.04 + ambProg * 0.18;
 
     if (ambientRef.current) {
       ambientRef.current.intensity = THREE.MathUtils.lerp(
@@ -157,7 +142,7 @@ export const WorldLighting: React.FC<WorldLightingProps> = ({ phase }) => {
     if (haloLightRef.current) {
       haloLightRef.current.intensity = THREE.MathUtils.lerp(
         haloLightRef.current.intensity,
-        targetSpotIntensity * 0.4,
+        targetHaloIntensity,
         lerpSpeed
       );
     }
@@ -181,7 +166,7 @@ export const WorldLighting: React.FC<WorldLightingProps> = ({ phase }) => {
   return (
     <group>
       {/* Tertiary: Very faint ambient fill */}
-      <ambientLight ref={ambientRef} intensity={0.05} color="#120808" />
+      <ambientLight ref={ambientRef} intensity={0.04} color="#140808" />
 
       {/* Primary: Warm Crimson Spotlight on Pedestal */}
       <spotLight

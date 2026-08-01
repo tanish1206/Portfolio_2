@@ -13,13 +13,29 @@ import { WorldPhase } from "@/world/WorldController";
  * Phased arrival material reveal animation.
  */
 
+"use client";
+
+import React, { useRef } from "react";
+import { useFrame } from "@react-three/fiber";
+import * as THREE from "three";
+import { WorldPhase } from "@/world/WorldController";
+
 interface MuseumProps {
   phase: WorldPhase;
+  progress?: number;
 }
 
-export function CompassPedestal({ opacity = 1 }: { opacity?: number }) {
+export function CompassPedestal({
+  opacity = 1,
+  positionY = 0,
+}: {
+  opacity?: number;
+  positionY?: number;
+}) {
+  const groupRef = useRef<THREE.Group>(null);
+
   return (
-    <group position={[0, 0, 0]}>
+    <group ref={groupRef} position={[0, positionY, 0]}>
       {/* Circular lower plinth */}
       <mesh castShadow receiveShadow position={[0, 0.12, 0]}>
         <cylinderGeometry args={[0.95, 1.05, 0.24, 32]} />
@@ -68,73 +84,62 @@ export function CompassPedestal({ opacity = 1 }: { opacity?: number }) {
   );
 }
 
-export const Museum: React.FC<MuseumProps> = ({ phase }) => {
+export const Museum: React.FC<MuseumProps> = ({ phase, progress = 0 }) => {
+  const floorMeshRef = useRef<THREE.Mesh>(null);
   const floorMatRef = useRef<THREE.MeshStandardMaterial>(null);
+  const wallGroupRef = useRef<THREE.Group>(null);
   const wallMatRef = useRef<THREE.MeshStandardMaterial>(null);
+  const pillarsGroupRef = useRef<THREE.Group>(null);
   const pillarMatRef = useRef<THREE.MeshStandardMaterial>(null);
+  const beamsGroupRef = useRef<THREE.Group>(null);
   const steelMatRef = useRef<THREE.MeshStandardMaterial>(null);
+  const pedestalGroupRef = useRef<THREE.Group>(null);
 
   useFrame((_, delta) => {
-    // 1. Calculate target floor opacity
-    let targetFloor = 0;
-    if (
-      phase === "FLOOR_REVEAL" ||
-      phase === "SPOTLIGHT_ON" ||
-      phase === "PILLARS_FADE" ||
-      phase === "MUSEUM_SETTLE" ||
-      phase === "MUSEUM_IDLE" ||
-      phase === "COMPASS_HOVER" ||
-      phase === "COMPASS_TRANSFORM" ||
-      phase === "CAREER_COMPASS" ||
-      phase === "RETURNING"
-    ) {
-      targetFloor = phase === "FLOOR_REVEAL" ? 0.65 : 1.0;
+    const p = progress;
+    const lerpSpeed = Math.min(delta * 4, 1);
+
+    // 1. Floor assembly progress (10% to 20%)
+    const fProg = Math.min(1, Math.max(0, (p - 0.10) / 0.10));
+    if (floorMeshRef.current && floorMatRef.current) {
+      const targetScaleXZ = fProg > 0 ? 0.05 + fProg * 0.95 : 0.001;
+      floorMeshRef.current.scale.x = THREE.MathUtils.lerp(floorMeshRef.current.scale.x, targetScaleXZ, lerpSpeed);
+      floorMeshRef.current.scale.y = THREE.MathUtils.lerp(floorMeshRef.current.scale.y, targetScaleXZ, lerpSpeed);
+      floorMatRef.current.opacity = THREE.MathUtils.lerp(floorMatRef.current.opacity, fProg, lerpSpeed);
     }
 
-    // 2. Calculate target architecture (pillars/walls/beams) opacity
-    let targetArch = 0;
-    if (
-      phase === "SPOTLIGHT_ON" ||
-      phase === "PILLARS_FADE" ||
-      phase === "MUSEUM_SETTLE" ||
-      phase === "MUSEUM_IDLE" ||
-      phase === "COMPASS_HOVER" ||
-      phase === "COMPASS_TRANSFORM" ||
-      phase === "CAREER_COMPASS" ||
-      phase === "RETURNING"
-    ) {
-      targetArch = phase === "SPOTLIGHT_ON" ? 0.25 : 1.0;
+    // 2. Pillars physical growth (20% to 35%)
+    const pilProg = Math.min(1, Math.max(0, (p - 0.20) / 0.15));
+    if (pillarsGroupRef.current && pillarMatRef.current) {
+      const targetScaleY = pilProg > 0 ? pilProg : 0.001;
+      const targetPosY = pilProg * 7.5;
+      pillarsGroupRef.current.children.forEach((child) => {
+        child.scale.y = THREE.MathUtils.lerp(child.scale.y, targetScaleY, lerpSpeed);
+      });
+      pillarMatRef.current.opacity = THREE.MathUtils.lerp(pillarMatRef.current.opacity, pilProg, lerpSpeed);
     }
 
-    const t = Math.min(delta * 2.5, 1);
+    // 3. Walls & Beams extrusion (35% to 50%)
+    const wProg = Math.min(1, Math.max(0, (p - 0.35) / 0.15));
+    if (wallGroupRef.current && wallMatRef.current) {
+      const targetScaleY = wProg > 0 ? wProg : 0.001;
+      wallGroupRef.current.children.forEach((child) => {
+        child.scale.y = THREE.MathUtils.lerp(child.scale.y, targetScaleY, lerpSpeed);
+      });
+      wallMatRef.current.opacity = THREE.MathUtils.lerp(wallMatRef.current.opacity, wProg, lerpSpeed);
+    }
 
-    if (floorMatRef.current) {
-      floorMatRef.current.opacity = THREE.MathUtils.lerp(
-        floorMatRef.current.opacity,
-        targetFloor,
-        t
-      );
+    if (beamsGroupRef.current && steelMatRef.current) {
+      const targetPosY = THREE.MathUtils.lerp(18, 14.85, wProg);
+      beamsGroupRef.current.position.y = THREE.MathUtils.lerp(beamsGroupRef.current.position.y, targetPosY, lerpSpeed);
+      steelMatRef.current.opacity = THREE.MathUtils.lerp(steelMatRef.current.opacity, wProg, lerpSpeed);
     }
-    if (wallMatRef.current) {
-      wallMatRef.current.opacity = THREE.MathUtils.lerp(
-        wallMatRef.current.opacity,
-        targetArch,
-        t
-      );
-    }
-    if (pillarMatRef.current) {
-      pillarMatRef.current.opacity = THREE.MathUtils.lerp(
-        pillarMatRef.current.opacity,
-        targetArch,
-        t
-      );
-    }
-    if (steelMatRef.current) {
-      steelMatRef.current.opacity = THREE.MathUtils.lerp(
-        steelMatRef.current.opacity,
-        targetArch,
-        t
-      );
+
+    // 4. Pedestal mechanical emergence (80% to 90%)
+    const pedProg = Math.min(1, Math.max(0, (p - 0.80) / 0.10));
+    if (pedestalGroupRef.current) {
+      const targetPedY = THREE.MathUtils.lerp(-1.3, 0, pedProg);
+      pedestalGroupRef.current.position.y = THREE.MathUtils.lerp(pedestalGroupRef.current.position.y, targetPedY, lerpSpeed);
     }
   });
 
@@ -152,7 +157,7 @@ export const Museum: React.FC<MuseumProps> = ({ phase }) => {
   return (
     <group>
       {/* ─── Polished Concrete Floor (25m × 36m) ─── */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+      <mesh ref={floorMeshRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <planeGeometry args={[50, 50]} />
         <meshStandardMaterial
           ref={floorMatRef}
@@ -178,7 +183,7 @@ export const Museum: React.FC<MuseumProps> = ({ phase }) => {
       </mesh>
 
       {/* ─── Walls (25m Wide Hall Boundaries) ─── */}
-      <group>
+      <group ref={wallGroupRef}>
         {/* Back wall */}
         <mesh position={[0, 7.5, -18]} receiveShadow>
           <planeGeometry args={[26, 15]} />
@@ -218,7 +223,7 @@ export const Museum: React.FC<MuseumProps> = ({ phase }) => {
       </group>
 
       {/* ─── Tall Concrete Pillars (15m Tall) ─── */}
-      <group>
+      <group ref={pillarsGroupRef}>
         {pillarPositions.map(([x, y, z], i) => (
           <group key={i} position={[x, y, z]}>
             {/* Cylinder column */}
@@ -262,9 +267,9 @@ export const Museum: React.FC<MuseumProps> = ({ phase }) => {
       </group>
 
       {/* ─── Structural Ceiling Beams ─── */}
-      <group>
+      <group ref={beamsGroupRef} position={[0, 18, 0]}>
         {[-12, -4, 4, 12].map((z, i) => (
-          <mesh key={`t${i}`} position={[0, 14.85, z]} castShadow>
+          <mesh key={`t${i}`} position={[0, 0, z]} castShadow>
             <boxGeometry args={[25, 0.35, 0.35]} />
             <meshStandardMaterial
               ref={steelMatRef}
@@ -277,7 +282,7 @@ export const Museum: React.FC<MuseumProps> = ({ phase }) => {
           </mesh>
         ))}
         {[-9, 9].map((x, i) => (
-          <mesh key={`l${i}`} position={[x, 14.85, 0]} castShadow>
+          <mesh key={`l${i}`} position={[x, 0, 0]} castShadow>
             <boxGeometry args={[0.30, 0.30, 36]} />
             <meshStandardMaterial
               ref={steelMatRef}
@@ -291,16 +296,10 @@ export const Museum: React.FC<MuseumProps> = ({ phase }) => {
         ))}
       </group>
 
-      {/* ─── Floor Accent Inset Line ─── */}
-      <group>
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.002, 0]}>
-          <ringGeometry args={[2.8, 2.85, 64]} />
-          <meshStandardMaterial color="#260C10" roughness={0.5} metalness={0.7} />
-        </mesh>
+      {/* ─── Compass Concrete Pedestal (Emerges at 80-90%) ─── */}
+      <group ref={pedestalGroupRef} position={[0, -1.3, 0]}>
+        <CompassPedestal opacity={1} />
       </group>
-
-      {/* ─── Compass Concrete Pedestal ─── */}
-      <CompassPedestal opacity={1} />
     </group>
   );
 };
