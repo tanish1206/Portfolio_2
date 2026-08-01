@@ -1,0 +1,94 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-space-grotesk: 'Space Grotesk', sans-serif;
+  --font-inter: 'Inter', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  background-color: #050505;
+  color: #F5F5F5;
+  font-family: var(--font-inter);
+  overflow-x: hidden;
+  width: 100vw;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #050505;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #222222;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00E5FF;
+}
+
+/* Glassmorphism utility */
+.glass-panel {
+  background: rgba(17, 17, 17, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-panel-hover:hover {
+  border-color: rgba(0, 229, 255, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(0, 229, 255, 0.1);
+}
+
+/* Glitch animation effects */
+@keyframes glitch-slice {
+  0% {
+    clip-path: inset(40% 0 61% 0);
+    transform: skew(0.3deg);
+  }
+  20% {
+    clip-path: inset(92% 0 1% 0);
+    transform: skew(-0.5deg);
+  }
+  40% {
+    clip-path: inset(10% 0 80% 0);
+    transform: skew(0.8deg);
+  }
+  60% {
+    clip-path: inset(25% 0 58% 0);
+    transform: skew(-0.3deg);
+  }
+  80% {
+    clip-path: inset(70% 0 12% 0);
+    transform: skew(0.5deg);
+  }
+  100% {
+    clip-path: inset(0% 0 0% 0);
+    transform: skew(0deg);
+  }
+}
+
+.animate-glitch {
+  animation: glitch-slice 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+/* Hide canvas pointers when custom cursor active */
+canvas {
+  touch-action: none;
+}
