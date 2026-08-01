@@ -100,77 +100,80 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
       onClick={handleClick}
       className="interactive-hover group relative flex cursor-pointer flex-col items-center justify-center select-none"
     >
-      {/* Overhead Soft Focused Crimson Spotlight Beam */}
+      {/* 1. Overhead Deep Crimson Spotlight Cone Layer */}
       <motion.div
-        className="pointer-events-none absolute -top-36 left-1/2 -translate-x-1/2 h-[480px] w-[480px] rounded-full blur-[90px] opacity-50 z-0"
+        className="pointer-events-none absolute -top-44 left-1/2 -translate-x-1/2 h-[520px] w-[520px] rounded-full blur-[100px] opacity-60 z-0"
         style={{
-          background: `radial-gradient(circle at center, #FF1E40 0%, #DC143C 40%, rgba(220,20,60,0.1) 70%, transparent 85%)`,
+          background: `radial-gradient(ellipse at top, #FF1E40 0%, #DC143C 45%, rgba(220,20,60,0.08) 75%, transparent 90%)`,
+          willChange: "transform, opacity",
         }}
         animate={{
           scale: isDissolving ? 1.8 : isGlitching ? 1.2 : 1,
-          opacity: isDissolving ? 0 : 0.5,
-          x: mouseOffset.x * 4 - 240,
+          opacity: isDissolving ? 0 : 0.6,
+          x: mouseOffset.x * 3,
         }}
         transition={{ duration: 0.8, ease: "easeOut" }}
       />
 
-      {/* Atmospheric Haze Layer */}
-      <div className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 h-[350px] w-[350px] rounded-full blur-[60px] opacity-25 bg-gradient-to-b from-[#FF1E40] to-transparent z-0" />
+      {/* 2. Volumetric Atmosphere Haze & Dust Layer */}
+      <div className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 h-[380px] w-[380px] rounded-full blur-[70px] opacity-30 bg-gradient-to-b from-[#FF1E40] to-transparent z-0" />
 
-      {/* Borderless Portrait Container with Micro-Breathing & Restrained 2° Tilt */}
+      {/* 3. Floating Cinematic Portrait Layer (45-50% Viewport Height, scale 1.25, object-fit: contain) */}
       <motion.div
-        className="portrait-vignette-mask relative z-10 h-[380px] w-[290px] overflow-hidden md:h-[480px] md:w-[370px] lg:h-[520px] lg:w-[400px]"
+        className="portrait-vignette-mask relative z-10 h-[380px] w-[300px] md:h-[480px] md:w-[380px] lg:h-[530px] lg:w-[420px] overflow-hidden"
+        style={{ willChange: "transform, opacity, filter" }}
         animate={{
-          scale: isDissolving ? 1.25 : phase === "HERO_PUSH" ? 1.1 : 1,
+          scale: isDissolving ? 1.3 : phase === "HERO_PUSH" ? 1.15 : 1,
           opacity: isDissolving ? 0 : 1,
-          y: isFreezing ? 0 : [0, -6, 0],
+          y: isFreezing ? 0 : [0, -5, 0],
           rotateX: mouseOffset.y * -1,
           rotateY: mouseOffset.x,
         }}
         transition={{
-          y: { duration: 5, repeat: Infinity, ease: "easeInOut" },
+          y: { duration: 6, repeat: Infinity, ease: "easeInOut" },
           scale: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
           opacity: { duration: 0.6 },
-          rotateX: { type: "spring", stiffness: 180, damping: 24 },
-          rotateY: { type: "spring", stiffness: 180, damping: 24 },
+          rotateX: { type: "spring", stiffness: 160, damping: 22 },
+          rotateY: { type: "spring", stiffness: 160, damping: 22 },
         }}
       >
-        {/* Active Identity Image */}
+        {/* Active Identity Image with transform scale(1.25) & object-contain */}
         <AnimatePresence mode="wait">
           <motion.div
             key={currentIdentity.id}
-            initial={{ opacity: 0, scale: 1.04, filter: "blur(4px)" }}
-            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-            exit={{ opacity: 0, scale: 0.96, filter: "blur(4px)" }}
+            initial={{ opacity: 0, scale: 1.28, filter: "blur(4px)" }}
+            animate={{ opacity: 1, scale: 1.25, filter: "blur(0px)" }}
+            exit={{ opacity: 0, scale: 1.22, filter: "blur(4px)" }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute inset-0 h-full w-full"
+            className="absolute inset-0 h-full w-full flex items-center justify-center"
+            style={{ willChange: "transform, opacity, filter" }}
           >
             <Image
               src={currentIdentity.image}
               alt={currentIdentity.title}
               fill
-              sizes="(max-width: 768px) 290px, (max-width: 1024px) 370px, 400px"
+              sizes="(max-width: 768px) 300px, (max-width: 1024px) 380px, 420px"
               priority
-              className="object-cover object-top filter contrast-[1.1] brightness-[0.95] saturate-[0.95] portrait-blend-image"
+              className="object-contain object-top filter contrast-[1.08] brightness-[0.98] saturate-[0.95] portrait-blend-image"
             />
           </motion.div>
         </AnimatePresence>
 
-        {/* Preload Next & Previous Identity Images */}
+        {/* Preload Identity Assets */}
         <div className="hidden">
           {IDENTITIES.map((identity) => (
             <Image
               key={identity.id}
               src={identity.image}
               alt={identity.title}
-              width={400}
-              height={520}
+              width={420}
+              height={530}
               priority={false}
             />
           ))}
         </div>
 
-        {/* Cinematic Glitch Overlay in Crimson / Soft Charcoal */}
+        {/* Glitch Overlay */}
         {isGlitching && (
           <div className="animate-glitch pointer-events-none absolute inset-0 z-20 overflow-hidden bg-accent-crimson/15 backdrop-blur-[2px]">
             <div className="absolute inset-0 bg-[radial-gradient(#FF1E40_1px,transparent_1px)] [background-size:10px_10px] opacity-50" />
@@ -179,7 +182,7 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
           </div>
         )}
 
-        {/* Soft Feathered Vignette & Light Wrap Overlay */}
+        {/* Feathered Dark Vignette Edge Blend */}
         <div className="pointer-events-none absolute inset-0 bg-radial-vignette opacity-95" />
       </motion.div>
     </div>
