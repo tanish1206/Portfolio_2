@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useRef, useState, Suspense, useEffect } from "react";
-import { useFrame, ThreeEvent, useLoader } from "@react-three/fiber";
+import React, { useRef, Suspense, useEffect } from "react";
+import { useFrame, ThreeEvent } from "@react-three/fiber";
 import { useGLTF, Points } from "@react-three/drei";
 import * as THREE from "three";
 import { WorldPhase } from "@/world/WorldController";

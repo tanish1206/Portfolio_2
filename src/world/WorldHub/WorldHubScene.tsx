@@ -12,36 +12,35 @@ import { WorldController, WorldState } from "@/world/WorldController";
 
 /**
  * WorldHubScene.tsx
- * The primary React Three Fiber scene.
- * Fully 3D — no HTML layout inside canvas.
- * Composes: Camera + Lighting + Environment + Compass
+ *
+ * The single persistent R3F Canvas for the entire portfolio world.
+ * Always rendering — Hero is just an overlay that fades out.
+ *
+ * Composition:
+ *   Camera    → WorldCamera (per-phase lerped keyframes)
+ *   Lighting  → WorldLighting (breathing crimson feature spotlight)
+ *   Atmosphere → WorldAtmosphere (dust, fog, spotlight particles)
+ *   Env       → Museum (procedural concrete/steel/stone architecture)
+ *   Exhibit 1 → CompassPedestal + CompassModel
  */
 
 function SceneContent({ state }: { state: WorldState }) {
-  const isMuseumVisible =
-    state.phase !== "HERO" && state.phase !== "FLY_THROUGH";
+  // Museum & compass visible from FLY_THROUGH onward (loading during tunnel)
+  const museumVisible = state.phase !== "HERO";
 
   return (
     <>
-      {/* Cinematographer Camera */}
       <WorldCamera phase={state.phase} />
-
-      {/* Museum Lighting */}
       <WorldLighting compassUnlocked={state.unlockedExhibits >= 1} />
-
-      {/* Atmospheric Dust & Fog */}
       <WorldAtmosphere />
 
-      {/* Physical Museum Environment */}
-      {isMuseumVisible && (
+      {museumVisible && (
         <Suspense fallback={null}>
           <Museum />
           <CompassPedestal />
           <CompassModel
             phase={state.phase}
-            onHover={(hovered) => {
-              WorldController.setHovered(hovered ? "compass" : null);
-            }}
+            onHover={(hovered) => WorldController.setHovered(hovered ? "compass" : null)}
             onClick={() => {
               if (state.phase === "MUSEUM_IDLE" || state.phase === "COMPASS_HOVER") {
                 WorldController.beginCompassTransform();
@@ -63,19 +62,22 @@ export const WorldHubScene: React.FC = () => {
 
   return (
     <Canvas
-      camera={{ position: [0, 1.8, 9], fov: 60, near: 0.1, far: 200 }}
+      camera={{ position: [0, 1.8, 9], fov: 60, near: 0.1, far: 250 }}
       gl={{
         antialias: true,
         alpha: false,
         powerPreference: "high-performance",
         toneMapping: THREE.ACESFilmicToneMapping,
-        toneMappingExposure: 1.0,
+        toneMappingExposure: 1.1,
       }}
-      shadows
+      shadows="soft"
       dpr={[1, 1.5]}
     >
-      {/* Fog — warm deep red atmospheric */}
-      <fog attach="fog" args={["#0A0204", 12, 55]} />
+      {/*
+        Fog: warm deep red, starts at 14m and fully opaque by 60m.
+        This hides the far walls fading into darkness naturally.
+      */}
+      <fog attach="fog" args={["#080102", 14, 62]} />
 
       <SceneContent state={worldState} />
     </Canvas>
