@@ -88,20 +88,20 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
     >
       {/* Overhead Soft Focused Crimson Spotlight Glow */}
       <motion.div
-        className="pointer-events-none absolute -top-28 left-1/2 -translate-x-1/2 h-[450px] w-[450px] rounded-full blur-3xl opacity-50 z-0"
+        className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 h-[380px] w-[380px] rounded-full blur-3xl opacity-40"
         style={{
           background: `radial-gradient(circle at center, #FF1E40 0%, #DC143C 35%, transparent 70%)`,
         }}
         animate={{
           scale: isDissolving ? 1.8 : isGlitching ? 1.15 : 1,
-          opacity: isDissolving ? 0 : 0.5,
+          opacity: isDissolving ? 0 : 0.4,
         }}
         transition={{ duration: 0.8 }}
       />
 
       {/* Borderless Portrait Container with Micro-Breathing & Restrained 2-3° Tilt */}
       <motion.div
-        className="portrait-vignette-mask relative h-[380px] w-[290px] overflow-hidden md:h-[460px] md:w-[360px] z-10"
+        className="portrait-vignette-mask relative h-[360px] w-[280px] overflow-hidden md:h-[440px] md:w-[340px]"
         animate={{
           scale: isDissolving ? 1.25 : phase === "HERO_PUSH" ? 1.1 : 1,
           opacity: isDissolving ? 0 : 1,
@@ -131,7 +131,7 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
               src={currentIdentity.image}
               alt={currentIdentity.title}
               fill
-              sizes="(max-width: 768px) 290px, 360px"
+              sizes="(max-width: 768px) 280px, 340px"
               priority
               className="object-cover object-center filter contrast-[1.08] brightness-95"
             />
