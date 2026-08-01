@@ -9,6 +9,17 @@ Cinematic Interactive Portfolio for Tanish Soni ([https://tanish-soni.vercel.app
 - **Aesthetics**: Apple, A24, luxury watch advertisement, architectural photography, dark minimal museum.
 - **Rule**: Nothing simply appears. Everything transforms into something else.
 
+## Exact Hero Visual Layout (Matched from Reference Image)
+1. **Top-Left Header**: `AI ENGINEER` / `FULL STACK DEVELOPER` / `HACKATHON BUILDER` / `PRODUCT BUILDER` + red accent bar.
+2. **Top-Right Header**: `01` / `BEGINNING` + red accent bar.
+3. **Left Margin**: Vertical `TANISH SONI` text with red glowing dot.
+4. **Right Margin**: Vertical `BUILDING IDEAS INTO REALITY.` text with red glowing dot.
+5. **Overhead Spotlight**: Dramatic top-center crimson radial beam shining down on head & shoulders.
+6. **Center Title**: Large wide-tracked `TANISH` (White) `SONI` (Crimson Red) overlapping chest level.
+7. **Divider**: Horizontal line with central red cross symbol `✦`.
+8. **Subtitle**: `BUILDING IDEAS INTO REALITY.` flanked by micro code snippets.
+9. **Scroll Cue**: `[ SCROLL TO BEGIN ]` in bracketed red text with vertical indicator line.
+
 ## Identity Cycle
 1. **Builder** (`/portraits/builder.png`) - Accent: `#DC143C`
 2. **Hackathon Engineer** (`/portraits/hackathon.png`) - Accent: `#FF1E40`
@@ -16,11 +27,6 @@ Cinematic Interactive Portfolio for Tanish Soni ([https://tanish-soni.vercel.app
 4. **AI Engineer** (`/portraits/ai_engineer.png`) - Accent: `#FF2A4B`
 5. **Founder** (`/portraits/founder.png`) - Accent: `#D91438`
 
-## Architecture & Controllers
-- **GlobalCinematicController**: Coordinates Hero timeline, Hero → World camera push & particle dissolve, scene transitions, and global state via GSAP & `CinematicContext`.
-- **HeroSection**: Minimalist typography, overhead soft crimson spotlight, seamless borderless portrait blending into black, restrained 2.5° cursor tilt.
-- **Interactive3DWorld**: Three.js WebGL canvas rendering atmospheric film dust particles, camera fly-through, and physical exhibit objects.
-
 ## Progress & Chat Summary
-- **Hero Redesign Completed**: Built borderless portrait with soft edge feathering into pitch black, single overhead focused crimson spotlight, restrained mouse tilt, and 10-step transition sequence.
+- **Hero Section Visual Match**: Recreated the exact visual direction, typography, lighting cone, side indicators, and bracketed scroll cue from the provided design reference.
 - **Build Status**: Passing cleanly on Next.js 14.2.35.
