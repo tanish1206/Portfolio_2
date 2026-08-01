@@ -5,34 +5,40 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { IDENTITIES, Identity } from "@/data/identities";
 import { useCinematic } from "@/context/CinematicContext";
+import { HeroExperienceController } from "@/lib/HeroExperienceController";
 
 interface IdentityTransformerProps {
   onIdentityChange?: (identity: Identity) => void;
-  onAcknowledge?: () => void;
-  onIdentityDiscovered?: () => void;
 }
 
 export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
   onIdentityChange,
-  onAcknowledge,
-  onIdentityDiscovered,
 }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const { heroState, identityIndex } = useCinematic();
   const [isGlitching, setIsGlitching] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const [isAcknowledged, setIsAcknowledged] = useState(false);
   const [mouseOffset, setMouseOffset] = useState({ x: 0, y: 0 });
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const prevIndexRef = useRef(identityIndex);
 
-  const { phase } = useCinematic();
-  const currentIdentity = IDENTITIES[currentIndex];
+  const currentIdentity = IDENTITIES[identityIndex] || IDENTITIES[0];
 
-  const isPrepped = phase === "TRANSITION_PREP";
-  const isDissolving = phase === "WORLD_TRANSITION" || phase === "WORLD_ACTIVE";
+  const isPrepped = heroState === "TRANSITION_PREP";
+  const isDissolving = heroState === "WORLD_TRANSITION" || heroState === "WORLD";
 
-  // Rule 2: Eyes follow cursor, shoulders breathe slightly, light intensity increases
+  // Trigger brief glitch overlay when controller advances identityIndex
+  useEffect(() => {
+    if (prevIndexRef.current !== identityIndex) {
+      prevIndexRef.current = identityIndex;
+      setIsGlitching(true);
+      if (onIdentityChange) onIdentityChange(IDENTITIES[identityIndex]);
+      const timer = setTimeout(() => setIsGlitching(false), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [identityIndex, onIdentityChange]);
+
+  // Eyes follow cursor (max 2° rotX/rotY)
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current || isPrepped || isDissolving) return;
     const rect = containerRef.current.getBoundingClientRect();
@@ -48,61 +54,19 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
     });
   };
 
-  const handleMouseLeave = () => {
-    setIsHovered(false);
-    setMouseOffset({ x: 0, y: 0 });
-    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
-  };
-
-  // Rule 2 & Rule 3: Hover ~700ms -> perform ONE identity transformation (no auto loop)
   const handleMouseEnter = () => {
     if (isPrepped || isDissolving) return;
     setIsHovered(true);
-
-    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
-
-    // 700ms anticipation delay before ONE single transformation
-    hoverTimerRef.current = setTimeout(() => {
-      triggerSingleTransformation();
-    }, 700);
+    // Delegate hover event to HeroExperienceController
+    HeroExperienceController.onHoverEnter();
   };
 
-  // Rule 5: Portrait Click Acknowledgement ("I unlocked something")
-  const handleClick = () => {
-    if (isPrepped || isDissolving || isGlitching) return;
-
-    setIsAcknowledged(true);
-    if (onAcknowledge) onAcknowledge();
-
-    setTimeout(() => {
-      setIsAcknowledged(false);
-    }, 1400);
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+    setMouseOffset({ x: 0, y: 0 });
+    // Delegate leave event to HeroExperienceController
+    HeroExperienceController.onHoverLeave();
   };
-
-  const triggerSingleTransformation = () => {
-    setIsGlitching(true);
-    setTimeout(() => {
-      setCurrentIndex((prev) => {
-        const next = (prev + 1) % IDENTITIES.length;
-        if (onIdentityChange) onIdentityChange(IDENTITIES[next]);
-        return next;
-      });
-      if (onIdentityDiscovered) onIdentityDiscovered();
-    }, 400);
-
-    setTimeout(() => {
-      setIsGlitching(false);
-    }, 1000);
-  };
-
-  useEffect(() => {
-    if (onIdentityChange) {
-      onIdentityChange(IDENTITIES[0]);
-    }
-    return () => {
-      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
-    };
-  }, []);
 
   return (
     <div
@@ -110,10 +74,9 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      onClick={handleClick}
       className="interactive-hover absolute inset-0 w-full h-full flex items-center justify-center cursor-pointer select-none pointer-events-auto z-10"
     >
-      {/* Volumetric Spotlight Beam (Brighter on hover, narrows on click acknowledgement) */}
+      {/* Volumetric Spotlight Beam */}
       <motion.div
         className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-[75vh] w-[85vw] max-w-[1000px] rounded-full blur-[120px] opacity-65 z-0"
         style={{
@@ -121,34 +84,24 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
           willChange: "transform, opacity",
         }}
         animate={{
-          scale: isDissolving ? 1.8 : isAcknowledged ? 0.85 : isHovered ? 1.12 : isGlitching ? 1.2 : 1,
+          scale: isDissolving ? 1.8 : isHovered ? 1.12 : isGlitching ? 1.2 : 1,
           opacity: isDissolving ? 0 : isHovered ? 0.85 : 0.65,
           x: mouseOffset.x * 3,
         }}
         transition={{ duration: 0.8, ease: "easeOut" }}
       />
 
-      {/* Volumetric Dust & Atmospheric Haze */}
+      {/* Atmospheric Volumetric Dust Haze */}
       <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 h-[50vh] w-[50vw] max-w-[700px] rounded-full blur-[80px] opacity-30 bg-gradient-to-b from-[#FF1E40] to-transparent z-0" />
 
-      {/* Click Acknowledgement Red Pulse Ring */}
-      {isAcknowledged && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: [0, 0.85, 0], scale: [0.9, 1.25, 1.45] }}
-          transition={{ duration: 1.4, ease: "easeOut" }}
-          className="pointer-events-none absolute left-1/2 top-1/3 -translate-x-1/2 h-64 w-64 rounded-full bg-accent-crimson/25 blur-2xl z-20"
-        />
-      )}
-
-      {/* Floating Portrait Scene Layer (Scale 1.25, object-fit contain, no container box) */}
+      {/* Floating Portrait Scene Layer (Scale 1.25, object-fit contain) */}
       <motion.div
         className="portrait-vignette-mask relative z-10 w-[90vw] max-w-[650px] h-[55vh] md:h-[65vh] lg:h-[70vh] pointer-events-none flex items-center justify-center"
         style={{ willChange: "transform, opacity, filter" }}
         animate={{
           scale: isDissolving ? 1.3 : isPrepped ? 1.15 : isHovered ? 1.02 : 1,
           opacity: isDissolving ? 0 : 1,
-          y: isAcknowledged || isPrepped ? 0 : [0, -6, 0],
+          y: isPrepped ? 0 : [0, -6, 0],
           rotateX: mouseOffset.y * -1,
           rotateY: mouseOffset.x,
         }}
@@ -193,5 +146,3 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
     </div>
   );
 };
-
-

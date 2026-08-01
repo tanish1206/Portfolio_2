@@ -1,46 +1,19 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { IdentityTransformer } from "./IdentityTransformer";
 import { IDENTITIES, Identity } from "@/data/identities";
 import { useCinematic } from "@/context/CinematicContext";
+import { HeroExperienceController } from "@/lib/HeroExperienceController";
 
 export const HeroSection: React.FC = () => {
   const [activeIdentity, setActiveIdentity] = useState<Identity>(IDENTITIES[0]);
-  const [hasDiscoveredIdentity, setHasDiscoveredIdentity] = useState(false);
-  const [isClickedAcknowledged, setIsClickedAcknowledged] = useState(false);
-  const [showScrollHint, setShowScrollHint] = useState(false);
+  const { heroState } = useCinematic();
 
-  const { phase, setPhase } = useCinematic();
-
-  const isTransitioning = phase === "WORLD_TRANSITION" || phase === "WORLD_ACTIVE";
-  const isPrepped = phase === "TRANSITION_PREP";
-
-  // Listen for scroll attempt before portrait interaction hint
-  useEffect(() => {
-    const handleInteractHint = () => {
-      setShowScrollHint(true);
-      setTimeout(() => setShowScrollHint(false), 2200);
-    };
-
-    window.addEventListener("hero:interact_hint", handleInteractHint);
-    return () => window.removeEventListener("hero:interact_hint", handleInteractHint);
-  }, []);
-
-  const handleIdentityDiscovered = () => {
-    if (!hasDiscoveredIdentity) {
-      setHasDiscoveredIdentity(true);
-      if (phase === "IDLE" || phase === "HOVER_READY") {
-        setPhase("IDENTITY_UNLOCKED");
-      }
-    }
-  };
-
-  const handlePortraitAcknowledge = () => {
-    setIsClickedAcknowledged(true);
-    setPhase("ENTER_READY");
-  };
+  const isTransitioning = heroState === "WORLD_TRANSITION" || heroState === "WORLD";
+  const isPrepped = heroState === "TRANSITION_PREP";
+  const isReady = heroState === "READY_TO_ENTER" || isPrepped;
 
   return (
     <section className="relative h-screen w-full overflow-hidden bg-[#050505] selection:bg-accent-crimson selection:text-white text-neutral-300">
@@ -76,11 +49,7 @@ export const HeroSection: React.FC = () => {
           transition={{ duration: 1.2, delay: 0.2 }}
           className="absolute inset-0 z-10 w-full h-full pointer-events-auto"
         >
-          <IdentityTransformer
-            onIdentityChange={setActiveIdentity}
-            onAcknowledge={handlePortraitAcknowledge}
-            onIdentityDiscovered={handleIdentityDiscovered}
-          />
+          <IdentityTransformer onIdentityChange={setActiveIdentity} />
         </motion.div>
 
         {/* POSTER TYPOGRAPHY & HUD OVERLAY */}
@@ -145,7 +114,7 @@ export const HeroSection: React.FC = () => {
             +
           </div>
 
-          {/* Center Intersecting Movie Poster Typography (Overlaps Chest Level) */}
+          {/* Center Intersecting Movie Poster Typography */}
           <div className="my-auto flex flex-col items-center justify-center text-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -183,57 +152,42 @@ export const HeroSection: React.FC = () => {
             </motion.div>
           </div>
 
-          {/* DETERMINISTIC CTA STATE CONTROLLER (Rules 4, 5, 6) */}
-          <div className="flex flex-col items-center gap-1 text-center pb-2 pointer-events-auto">
+          {/* HERO INTERACTION OVERLAY (Strict specification requirements) */}
+          <div className="flex flex-col items-center gap-1 text-center pb-4 pointer-events-auto">
             <AnimatePresence mode="wait">
-              {showScrollHint ? (
+              {isReady ? (
                 <motion.div
-                  key="scroll-hint"
-                  initial={{ opacity: 0, y: 5 }}
+                  key="discovered-ready"
+                  initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -5 }}
-                  className="font-mono text-[10px] md:text-[11px] tracking-[0.25em] uppercase text-accent-crimson font-medium"
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.8 }}
+                  onClick={() => {
+                    if (heroState === "READY_TO_ENTER") HeroExperienceController.prepareTransition();
+                    else if (heroState === "TRANSITION_PREP") HeroExperienceController.startTransition();
+                  }}
+                  className="flex flex-col items-center space-y-1 font-mono text-[10px] md:text-[11px] tracking-[0.25em] uppercase text-neutral-300 cursor-pointer"
                 >
-                  [ INTERACT WITH THE PORTRAIT FIRST ]
-                </motion.div>
-              ) : isClickedAcknowledged || phase === "ENTER_READY" || phase === "TRANSITION_PREP" ? (
-                <motion.div
-                  key="scroll-to-enter"
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: [0.7, 1, 0.7], y: 0 }}
-                  transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-                  className="flex flex-col items-center space-y-1 font-mono text-[10px] md:text-[11px] tracking-[0.25em] uppercase text-neutral-300"
-                >
-                  <div className="flex items-center space-x-1">
+                  <span className="text-accent-crimson font-medium text-[11px]">✓ Identity discovered</span>
+                  <div className="flex items-center space-x-1 mt-1">
                     <span className="text-accent-crimson">[</span>
-                    <span className="text-white font-semibold">SCROLL TO ENTER</span>
-                    <span className="text-accent-crimson font-semibold">]</span>
-                  </div>
-                  <div className="h-6 w-[1px] bg-gradient-to-b from-accent-crimson to-transparent mt-1" />
-                </motion.div>
-              ) : hasDiscoveredIdentity || phase === "IDENTITY_UNLOCKED" || phase === "CLICK_READY" ? (
-                <motion.div
-                  key="click-to-continue"
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: [0.6, 1, 0.6], y: 0 }}
-                  transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-                  className="flex flex-col items-center space-y-1 font-mono text-[10px] md:text-[11px] tracking-[0.25em] uppercase text-neutral-300"
-                >
-                  <div className="flex items-center space-x-1">
-                    <span className="text-accent-crimson">[</span>
-                    <span className="text-white font-semibold">CLICK TO CONTINUE</span>
+                    <span className="text-white font-semibold">
+                      {isPrepped ? "SCROLL AGAIN TO ENTER" : "SCROLL TO ENTER THE WORLD"}
+                    </span>
                     <span className="text-accent-crimson font-semibold">]</span>
                   </div>
                   <div className="h-6 w-[1px] bg-gradient-to-b from-accent-crimson to-transparent mt-1" />
                 </motion.div>
               ) : (
                 <motion.div
-                  key="hover-discover"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 0.5 }}
-                  className="font-mono text-[10px] tracking-[0.25em] uppercase text-neutral-500"
+                  key="move-cursor-begin"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: [0.5, 0.95, 0.5], y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  className="font-mono text-[10px] md:text-[11px] tracking-[0.25em] uppercase text-neutral-400"
                 >
-                  HOVER PORTRAIT TO DISCOVER
+                  Move your cursor over the portrait to begin.
                 </motion.div>
               )}
             </AnimatePresence>

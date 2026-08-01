@@ -2,17 +2,16 @@
 
 import React, { useEffect, useRef } from "react";
 import { useCinematic } from "@/context/CinematicContext";
-import gsap from "gsap";
+import { HeroExperienceController, HeroState } from "@/lib/HeroExperienceController";
 
 export const GlobalCinematicController: React.FC = () => {
-  const { phase, setPhase, setScrollProgress, resetToHero } = useCinematic();
-  const phaseRef = useRef(phase);
-  const isTransitioningRef = useRef(false);
+  const { heroState, setScrollProgress, resetToHero } = useCinematic();
+  const stateRef = useRef<HeroState>(heroState);
   const touchStartYRef = useRef(0);
 
   useEffect(() => {
-    phaseRef.current = phase;
-  }, [phase]);
+    stateRef.current = heroState;
+  }, [heroState]);
 
   // Synchronize scroll progress & automatically restore Hero when near top
   useEffect(() => {
@@ -23,7 +22,7 @@ export const GlobalCinematicController: React.FC = () => {
         setScrollProgress(progress);
       }
 
-      if (window.scrollY <= 10 && phaseRef.current !== "IDLE" && !isTransitioningRef.current) {
+      if (window.scrollY <= 10 && stateRef.current !== "DISCOVERY" && stateRef.current !== "BOOT" && stateRef.current !== "IDLE") {
         resetToHero();
       }
     };
@@ -32,69 +31,25 @@ export const GlobalCinematicController: React.FC = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [resetToHero, setScrollProgress]);
 
-  // Rule 6: First Scroll -> Prepare transition (TRANSITION_PREP)
-  const triggerTransitionPrep = () => {
-    if (isTransitioningRef.current) return;
-    isTransitioningRef.current = true;
-
-    setPhase("TRANSITION_PREP");
-    
-    // Hold preparation pause (1.5s camera push, spotlight tightening)
-    setTimeout(() => {
-      isTransitioningRef.current = false;
-    }, 1800);
-  };
-
-  // Rule 7: Second Scroll -> Full ~10-12 second cinematic transition (WORLD_TRANSITION -> WORLD_ACTIVE)
-  const triggerWorldTransition = () => {
-    if (isTransitioningRef.current) return;
-    isTransitioningRef.current = true;
-
-    setPhase("WORLD_TRANSITION");
-
-    const tl = gsap.timeline({
-      onComplete: () => {
-        setPhase("WORLD_ACTIVE");
-        isTransitioningRef.current = false;
-      },
-    });
-
-    // 10-12 second cinematic timing specification
-    tl.to({}, { duration: 2.0 }) // Portrait dissolve
-      .to({}, { duration: 2.5 }) // Particle travel / flythrough
-      .to({}, { duration: 2.5 }) // Architecture assembly
-      .to({}, { duration: 1.2 }); // Mechanical Compass reveal
-  };
-
-  // Reverse restoration sequence
-  const reverseCinematicSequence = () => {
-    if (phaseRef.current === "IDLE" || isTransitioningRef.current) return;
-    isTransitioningRef.current = true;
-
-    resetToHero();
-    isTransitioningRef.current = false;
-  };
-
   // Event handlers for Wheel, Touch, and Keyboard
   useEffect(() => {
     const handleWheel = (e: WheelEvent) => {
-      const current = phaseRef.current;
+      const current = stateRef.current;
 
       if (e.deltaY > 0) {
-        if (current === "ENTER_READY") {
+        // Scroll Lock: Ignore scroll until first successful hover
+        if (current === "DISCOVERY" || current === "BOOT" || current === "IDLE") {
           e.preventDefault();
-          triggerTransitionPrep();
+        } else if (current === "READY_TO_ENTER") {
+          e.preventDefault();
+          HeroExperienceController.prepareTransition();
         } else if (current === "TRANSITION_PREP") {
           e.preventDefault();
-          triggerWorldTransition();
-        } else if (current === "IDLE" || current === "HOVER_READY" || current === "IDENTITY_UNLOCKED") {
-          e.preventDefault();
-          // Dispatch hint event: "Interact with the portrait first."
-          window.dispatchEvent(new CustomEvent("hero:interact_hint"));
+          HeroExperienceController.startTransition();
         }
-      } else if (e.deltaY < 0 && window.scrollY <= 100 && current !== "IDLE") {
+      } else if (e.deltaY < 0 && window.scrollY <= 100 && current !== "DISCOVERY" && current !== "BOOT" && current !== "IDLE") {
         e.preventDefault();
-        reverseCinematicSequence();
+        HeroExperienceController.reset();
       }
     };
 
@@ -104,41 +59,39 @@ export const GlobalCinematicController: React.FC = () => {
 
     const handleTouchMove = (e: TouchEvent) => {
       const deltaY = touchStartYRef.current - e.touches[0].clientY;
-      const current = phaseRef.current;
+      const current = stateRef.current;
 
       if (deltaY > 20) {
-        if (current === "ENTER_READY") {
+        if (current === "DISCOVERY" || current === "BOOT" || current === "IDLE") {
           e.preventDefault();
-          triggerTransitionPrep();
+        } else if (current === "READY_TO_ENTER") {
+          e.preventDefault();
+          HeroExperienceController.prepareTransition();
         } else if (current === "TRANSITION_PREP") {
           e.preventDefault();
-          triggerWorldTransition();
-        } else if (current === "IDLE" || current === "HOVER_READY" || current === "IDENTITY_UNLOCKED") {
-          e.preventDefault();
-          window.dispatchEvent(new CustomEvent("hero:interact_hint"));
+          HeroExperienceController.startTransition();
         }
-      } else if (deltaY < -20 && window.scrollY <= 100 && current !== "IDLE") {
+      } else if (deltaY < -20 && window.scrollY <= 100 && current !== "DISCOVERY" && current !== "BOOT" && current !== "IDLE") {
         e.preventDefault();
-        reverseCinematicSequence();
+        HeroExperienceController.reset();
       }
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      const current = phaseRef.current;
+      const current = stateRef.current;
       if (e.key === "ArrowDown" || e.key === "PageDown" || e.key === " ") {
-        if (current === "ENTER_READY") {
+        if (current === "DISCOVERY" || current === "BOOT" || current === "IDLE") {
           e.preventDefault();
-          triggerTransitionPrep();
+        } else if (current === "READY_TO_ENTER") {
+          e.preventDefault();
+          HeroExperienceController.prepareTransition();
         } else if (current === "TRANSITION_PREP") {
           e.preventDefault();
-          triggerWorldTransition();
-        } else if (current === "IDLE" || current === "HOVER_READY" || current === "IDENTITY_UNLOCKED") {
-          e.preventDefault();
-          window.dispatchEvent(new CustomEvent("hero:interact_hint"));
+          HeroExperienceController.startTransition();
         }
-      } else if ((e.key === "ArrowUp" || e.key === "PageUp") && window.scrollY <= 100 && current !== "IDLE") {
+      } else if ((e.key === "ArrowUp" || e.key === "PageUp") && window.scrollY <= 100 && current !== "DISCOVERY" && current !== "BOOT" && current !== "IDLE") {
         e.preventDefault();
-        reverseCinematicSequence();
+        HeroExperienceController.reset();
       }
     };
 
@@ -157,7 +110,3 @@ export const GlobalCinematicController: React.FC = () => {
 
   return null;
 };
-
-
-
-
