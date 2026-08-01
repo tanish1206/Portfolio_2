@@ -96,6 +96,7 @@ export const WorldLighting: React.FC<WorldLightingProps> = ({ phase, progress = 
   const ambientRef = useRef<THREE.AmbientLight>(null);
   const rimLeftRef = useRef<THREE.PointLight>(null);
   const rimRightRef = useRef<THREE.PointLight>(null);
+  const constrLightRef = useRef<THREE.PointLight>(null);
 
   useFrame(({ clock }, delta) => {
     const t = clock.getElapsedTime();
@@ -103,26 +104,36 @@ export const WorldLighting: React.FC<WorldLightingProps> = ({ phase, progress = 
     const lerpSpeed = Math.min(delta * 4, 1);
 
     // 1. Primary Spotlight Ignition (50% to 65% progress)
-    const spotProg = Math.min(1, Math.max(0, (p - 0.50) / 0.08));
-    const baseSpot = spotProg * 11.0;
+    const spotProg = Math.min(1, Math.max(0, (p - 0.50) / 0.12));
+    const baseSpot = spotProg * 14.0;
     const targetSpotIntensity = baseSpot > 0 ? baseSpot + Math.sin(t * 0.45) * 0.6 : 0;
 
     // 2. Wide Crimson Halo Ignition (55% to 65% progress)
-    const haloProg = Math.min(1, Math.max(0, (p - 0.55) / 0.08));
-    const targetHaloIntensity = haloProg * 4.5;
+    const haloProg = Math.min(1, Math.max(0, (p - 0.55) / 0.10));
+    const targetHaloIntensity = haloProg * 5.5;
 
-    // 3. Secondary Soft Ivory Rim Lights (60% to 70% progress)
-    const rimProg = Math.min(1, Math.max(0, (p - 0.60) / 0.08));
-    const targetRimIntensity = rimProg * 0.55;
+    // 3. Secondary Soft Ivory Rim Lights (60% to 75% progress)
+    const rimProg = Math.min(1, Math.max(0, (p - 0.60) / 0.12));
+    const targetRimIntensity = rimProg * 0.85;
 
-    // 4. Ambient Warm Fill (20% to 65% progress)
-    const ambProg = Math.min(1, Math.max(0, (p - 0.20) / 0.45));
-    const targetAmbient = 0.04 + ambProg * 0.18;
+    // 4. Construction Ambient Illumination (0.05 to 1.0 progress)
+    // Ensures floor, pillars, and walls are clearly visible as they physically assemble
+    const constrProg = Math.min(1, Math.max(0, (p - 0.05) / 0.20));
+    const targetAmbient = 0.25 + constrProg * 0.35; // Range 0.25 to 0.60
+    const targetConstrIntensity = constrProg * 3.5;
 
     if (ambientRef.current) {
       ambientRef.current.intensity = THREE.MathUtils.lerp(
         ambientRef.current.intensity,
         targetAmbient,
+        lerpSpeed
+      );
+    }
+
+    if (constrLightRef.current) {
+      constrLightRef.current.intensity = THREE.MathUtils.lerp(
+        constrLightRef.current.intensity,
+        targetConstrIntensity,
         lerpSpeed
       );
     }
@@ -165,17 +176,26 @@ export const WorldLighting: React.FC<WorldLightingProps> = ({ phase, progress = 
 
   return (
     <group>
-      {/* Tertiary: Very faint ambient fill */}
-      <ambientLight ref={ambientRef} intensity={0.04} color="#140808" />
+      {/* Tertiary: Ambient fill — warm dark crimson for architectural visibility */}
+      <ambientLight ref={ambientRef} intensity={0.35} color="#351216" />
+
+      {/* Central Construction Red Point Light — illuminates floor & growing pillars */}
+      <pointLight
+        ref={constrLightRef}
+        position={[0, 4.5, 0]}
+        color="#FF1E40"
+        intensity={0}
+        distance={28}
+      />
 
       {/* Primary: Warm Crimson Spotlight on Pedestal */}
       <spotLight
         ref={spotLightRef}
         position={[0, 14.2, 0.5]}
         color="#FF1E40"
-        angle={0.22}
-        penumbra={0.6}
-        distance={25}
+        angle={0.24}
+        penumbra={0.55}
+        distance={28}
         intensity={0}
         castShadow
         shadow-mapSize-width={2048}
@@ -191,7 +211,7 @@ export const WorldLighting: React.FC<WorldLightingProps> = ({ phase, progress = 
         color="#DC143C"
         angle={0.65}
         penumbra={1.0}
-        distance={20}
+        distance={22}
         intensity={0}
       />
 
@@ -215,8 +235,8 @@ export const WorldLighting: React.FC<WorldLightingProps> = ({ phase, progress = 
       <pointLight
         position={[0, 0.9, 1.5]}
         color="#52150D"
-        intensity={0.4}
-        distance={12}
+        intensity={0.6}
+        distance={14}
       />
     </group>
   );

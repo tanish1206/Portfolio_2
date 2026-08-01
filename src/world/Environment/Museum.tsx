@@ -89,48 +89,51 @@ export const Museum: React.FC<MuseumProps> = ({ phase, progress = 0 }) => {
 
   useFrame((_, delta) => {
     const p = progress;
-    const lerpSpeed = Math.min(delta * 4, 1);
+    const lerpSpeed = Math.min(delta * 5, 1);
 
     // 1. Floor assembly progress (10% to 20%)
-    const fProg = Math.min(1, Math.max(0, (p - 0.10) / 0.10));
+    const fProg = Math.min(1, Math.max(0, (p - 0.08) / 0.12));
     if (floorMeshRef.current && floorMatRef.current) {
       const targetScaleXZ = fProg > 0 ? 0.05 + fProg * 0.95 : 0.001;
+      const targetOpacity = fProg > 0 ? 0.85 + fProg * 0.15 : 0;
       floorMeshRef.current.scale.x = THREE.MathUtils.lerp(floorMeshRef.current.scale.x, targetScaleXZ, lerpSpeed);
       floorMeshRef.current.scale.y = THREE.MathUtils.lerp(floorMeshRef.current.scale.y, targetScaleXZ, lerpSpeed);
-      floorMatRef.current.opacity = THREE.MathUtils.lerp(floorMatRef.current.opacity, fProg, lerpSpeed);
+      floorMatRef.current.opacity = THREE.MathUtils.lerp(floorMatRef.current.opacity, targetOpacity, lerpSpeed);
     }
 
     // 2. Pillars physical growth (20% to 35%)
-    const pilProg = Math.min(1, Math.max(0, (p - 0.20) / 0.15));
+    const pilProg = Math.min(1, Math.max(0, (p - 0.18) / 0.17));
     if (pillarsGroupRef.current && pillarMatRef.current) {
       const targetScaleY = pilProg > 0 ? pilProg : 0.001;
-      const targetPosY = pilProg * 7.5;
+      const targetOpacity = pilProg > 0 ? 0.88 + pilProg * 0.12 : 0;
       pillarsGroupRef.current.children.forEach((child) => {
         child.scale.y = THREE.MathUtils.lerp(child.scale.y, targetScaleY, lerpSpeed);
       });
-      pillarMatRef.current.opacity = THREE.MathUtils.lerp(pillarMatRef.current.opacity, pilProg, lerpSpeed);
+      pillarMatRef.current.opacity = THREE.MathUtils.lerp(pillarMatRef.current.opacity, targetOpacity, lerpSpeed);
     }
 
     // 3. Walls & Beams extrusion (35% to 50%)
-    const wProg = Math.min(1, Math.max(0, (p - 0.35) / 0.15));
+    const wProg = Math.min(1, Math.max(0, (p - 0.32) / 0.18));
     if (wallGroupRef.current && wallMatRef.current) {
       const targetScaleY = wProg > 0 ? wProg : 0.001;
+      const targetOpacity = wProg > 0 ? 0.90 + wProg * 0.10 : 0;
       wallGroupRef.current.children.forEach((child) => {
         child.scale.y = THREE.MathUtils.lerp(child.scale.y, targetScaleY, lerpSpeed);
       });
-      wallMatRef.current.opacity = THREE.MathUtils.lerp(wallMatRef.current.opacity, wProg, lerpSpeed);
+      wallMatRef.current.opacity = THREE.MathUtils.lerp(wallMatRef.current.opacity, targetOpacity, lerpSpeed);
     }
 
     if (beamsGroupRef.current && steelMatRef.current) {
-      const targetPosY = THREE.MathUtils.lerp(18, 14.85, wProg);
+      const targetPosY = THREE.MathUtils.lerp(22, 14.85, wProg);
+      const targetOpacity = wProg > 0 ? 0.90 + wProg * 0.10 : 0;
       beamsGroupRef.current.position.y = THREE.MathUtils.lerp(beamsGroupRef.current.position.y, targetPosY, lerpSpeed);
-      steelMatRef.current.opacity = THREE.MathUtils.lerp(steelMatRef.current.opacity, wProg, lerpSpeed);
+      steelMatRef.current.opacity = THREE.MathUtils.lerp(steelMatRef.current.opacity, targetOpacity, lerpSpeed);
     }
 
     // 4. Pedestal mechanical emergence (80% to 90%)
-    const pedProg = Math.min(1, Math.max(0, (p - 0.80) / 0.10));
+    const pedProg = Math.min(1, Math.max(0, (p - 0.78) / 0.12));
     if (pedestalGroupRef.current) {
-      const targetPedY = THREE.MathUtils.lerp(-1.3, 0, pedProg);
+      const targetPedY = THREE.MathUtils.lerp(-1.4, 0, pedProg);
       pedestalGroupRef.current.position.y = THREE.MathUtils.lerp(pedestalGroupRef.current.position.y, targetPedY, lerpSpeed);
     }
   });
