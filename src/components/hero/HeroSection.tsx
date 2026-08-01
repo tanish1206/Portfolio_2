@@ -182,12 +182,12 @@ export const HeroSection: React.FC = () => {
                 <motion.div
                   key="move-cursor-begin"
                   initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: [0.5, 0.95, 0.5], y: 0 }}
+                  animate={{ opacity: [0.6, 1, 0.6], y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                  className="font-mono text-[10px] md:text-[11px] tracking-[0.25em] uppercase text-neutral-400"
+                  transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                  className="font-mono text-[10px] md:text-[11px] tracking-[0.25em] uppercase text-neutral-300"
                 >
-                  Move your cursor over the portrait to begin.
+                  HOVER PORTRAIT OR SCROLL DOWN TO ENTER THE WORLD
                 </motion.div>
               )}
             </AnimatePresence>

@@ -89,8 +89,8 @@ function useCompassAnimation(
         groupRef.current.rotation.y, Math.sin(t * 1.5) * 0.12, delta * 5
       );
     } else {
-      // Idle micro-float
-      groupRef.current.position.y = Math.sin(t * 1.1) * 0.038;
+      // Idle micro-float on top of pedestal (pedestal height = 1.28m)
+      groupRef.current.position.y = 1.30 + Math.sin(t * 1.1) * 0.038;
       groupRef.current.rotation.x = THREE.MathUtils.lerp(
         groupRef.current.rotation.x, Math.sin(t * 0.45) * 0.035, delta * 2
       );

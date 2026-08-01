@@ -32,9 +32,9 @@ export function CompassPedestal({
       <mesh castShadow receiveShadow position={[0, 0.12, 0]}>
         <cylinderGeometry args={[0.95, 1.05, 0.24, 32]} />
         <meshStandardMaterial
-          color="#121010"
-          roughness={0.85}
-          metalness={0.12}
+          color="#363030"
+          roughness={0.75}
+          metalness={0.20}
           transparent
           opacity={opacity}
         />
@@ -43,9 +43,9 @@ export function CompassPedestal({
       <mesh castShadow receiveShadow position={[0, 0.72, 0]}>
         <cylinderGeometry args={[0.60, 0.65, 0.96, 32]} />
         <meshStandardMaterial
-          color="#161414"
-          roughness={0.88}
-          metalness={0.10}
+          color="#464040"
+          roughness={0.80}
+          metalness={0.15}
           transparent
           opacity={opacity}
         />
@@ -54,9 +54,9 @@ export function CompassPedestal({
       <mesh castShadow receiveShadow position={[0, 1.24, 0]}>
         <cylinderGeometry args={[0.72, 0.70, 0.08, 32]} />
         <meshStandardMaterial
-          color="#1A1818"
-          roughness={0.70}
-          metalness={0.25}
+          color="#565050"
+          roughness={0.60}
+          metalness={0.35}
           transparent
           opacity={opacity}
         />
@@ -65,9 +65,9 @@ export function CompassPedestal({
       <mesh receiveShadow position={[0, 1.282, 0]}>
         <cylinderGeometry args={[0.68, 0.68, 0.005, 32]} />
         <meshStandardMaterial
-          color="#080606"
+          color="#262020"
           roughness={0.15}
-          metalness={0.70}
+          metalness={0.80}
           transparent
           opacity={opacity}
         />
@@ -156,9 +156,9 @@ export const Museum: React.FC<MuseumProps> = ({ phase, progress = 0 }) => {
         <planeGeometry args={[50, 50]} />
         <meshStandardMaterial
           ref={floorMatRef}
-          color="#0A0A0A"
-          roughness={0.22}
-          metalness={0.58}
+          color="#3A3636"
+          roughness={0.30}
+          metalness={0.45}
           transparent
           opacity={0}
         />
@@ -169,9 +169,9 @@ export const Museum: React.FC<MuseumProps> = ({ phase, progress = 0 }) => {
         <planeGeometry args={[50, 50]} />
         <meshStandardMaterial
           ref={wallMatRef}
-          color="#121212"
-          roughness={0.95}
-          metalness={0.05}
+          color="#2B2727"
+          roughness={0.90}
+          metalness={0.08}
           transparent
           opacity={0}
         />
@@ -184,9 +184,9 @@ export const Museum: React.FC<MuseumProps> = ({ phase, progress = 0 }) => {
           <planeGeometry args={[26, 15]} />
           <meshStandardMaterial
             ref={wallMatRef}
-            color="#141414"
-            roughness={0.96}
-            metalness={0.04}
+            color="#322E2E"
+            roughness={0.90}
+            metalness={0.08}
             transparent
             opacity={0}
           />
@@ -196,9 +196,9 @@ export const Museum: React.FC<MuseumProps> = ({ phase, progress = 0 }) => {
           <planeGeometry args={[36, 15]} />
           <meshStandardMaterial
             ref={wallMatRef}
-            color="#121212"
-            roughness={0.96}
-            metalness={0.04}
+            color="#2E2A2A"
+            roughness={0.90}
+            metalness={0.08}
             transparent
             opacity={0}
           />
@@ -208,9 +208,9 @@ export const Museum: React.FC<MuseumProps> = ({ phase, progress = 0 }) => {
           <planeGeometry args={[36, 15]} />
           <meshStandardMaterial
             ref={wallMatRef}
-            color="#121212"
-            roughness={0.96}
-            metalness={0.04}
+            color="#2E2A2A"
+            roughness={0.90}
+            metalness={0.08}
             transparent
             opacity={0}
           />
@@ -226,9 +226,9 @@ export const Museum: React.FC<MuseumProps> = ({ phase, progress = 0 }) => {
               <cylinderGeometry args={[0.65, 0.72, 15, 24]} />
               <meshStandardMaterial
                 ref={pillarMatRef}
-                color="#1A1818"
-                roughness={0.92}
-                metalness={0.06}
+                color="#423D3D"
+                roughness={0.80}
+                metalness={0.12}
                 transparent
                 opacity={0}
               />
@@ -238,9 +238,9 @@ export const Museum: React.FC<MuseumProps> = ({ phase, progress = 0 }) => {
               <cylinderGeometry args={[0.85, 0.85, 0.1, 24]} />
               <meshStandardMaterial
                 ref={steelMatRef}
-                color="#282525"
-                roughness={0.45}
-                metalness={0.88}
+                color="#5A5252"
+                roughness={0.35}
+                metalness={0.80}
                 transparent
                 opacity={0}
               />
