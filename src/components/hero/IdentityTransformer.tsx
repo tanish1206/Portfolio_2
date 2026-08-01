@@ -16,8 +16,11 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
 }) => {
   const { heroState, identityIndex } = useCinematic();
   const [isGlitching, setIsGlitching] = useState(false);
+  const [chromaticFlash, setChromaticFlash] = useState(false);
+  const [scanLines, setScanLines] = useState<{ top: string; height: string; offset: string }[]>([]);
   const [isHovered, setIsHovered] = useState(false);
   const [mouseOffset, setMouseOffset] = useState({ x: 0, y: 0 });
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const prevIndexRef = useRef(identityIndex);
@@ -27,16 +30,50 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
   const isPrepped = heroState === "TRANSITION_PREP";
   const isDissolving = heroState === "WORLD_TRANSITION" || heroState === "WORLD";
 
-  // Trigger brief glitch overlay when controller advances identityIndex
+  // Check prefers-reduced-motion accessibility preference
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+      setPrefersReducedMotion(mediaQuery.matches);
+      const listener = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+      mediaQuery.addEventListener("change", listener);
+      return () => mediaQuery.removeEventListener("change", listener);
+    }
+  }, []);
+
+  // Trigger refined Blade Runner glitch & chromatic flash on identity change
   useEffect(() => {
     if (prevIndexRef.current !== identityIndex) {
       prevIndexRef.current = identityIndex;
-      setIsGlitching(true);
+
       if (onIdentityChange) onIdentityChange(IDENTITIES[identityIndex]);
-      const timer = setTimeout(() => setIsGlitching(false), 800);
-      return () => clearTimeout(timer);
+
+      if (prefersReducedMotion) return;
+
+      // 1. Initial 120ms chromatic aberration flash
+      setChromaticFlash(true);
+      setIsGlitching(true);
+
+      // Generate 3-4 clean horizontal scan-line displacement bands
+      const newScanLines = Array.from({ length: 3 }).map(() => ({
+        top: `${Math.floor(20 + Math.random() * 60)}%`,
+        height: `${Math.floor(2 + Math.random() * 4)}px`,
+        offset: `${(Math.random() > 0.5 ? 1 : -1) * (3 + Math.random() * 5)}px`,
+      }));
+      setScanLines(newScanLines);
+
+      const flashTimer = setTimeout(() => setChromaticFlash(false), 130);
+      const glitchTimer = setTimeout(() => {
+        setIsGlitching(false);
+        setScanLines([]);
+      }, 750);
+
+      return () => {
+        clearTimeout(flashTimer);
+        clearTimeout(glitchTimer);
+      };
     }
-  }, [identityIndex, onIdentityChange]);
+  }, [identityIndex, onIdentityChange, prefersReducedMotion]);
 
   // Eyes follow cursor (max 2° rotX/rotY)
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -57,14 +94,12 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
   const handleMouseEnter = () => {
     if (isPrepped || isDissolving) return;
     setIsHovered(true);
-    // Delegate hover event to HeroExperienceController
     HeroExperienceController.onHoverEnter();
   };
 
   const handleMouseLeave = () => {
     setIsHovered(false);
     setMouseOffset({ x: 0, y: 0 });
-    // Delegate leave event to HeroExperienceController
     HeroExperienceController.onHoverLeave();
   };
 
@@ -76,7 +111,7 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
       onMouseLeave={handleMouseLeave}
       className="interactive-hover absolute inset-0 w-full h-full flex items-center justify-center cursor-pointer select-none pointer-events-auto z-10"
     >
-      {/* Volumetric Spotlight Beam */}
+      {/* Volumetric Red Spotlight Beam */}
       <motion.div
         className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 h-[75vh] w-[85vw] max-w-[1000px] rounded-full blur-[120px] opacity-65 z-0"
         style={{
@@ -84,19 +119,19 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
           willChange: "transform, opacity",
         }}
         animate={{
-          scale: isDissolving ? 1.8 : isHovered ? 1.15 : isGlitching ? 1.2 : 1,
+          scale: isDissolving ? 1.8 : isHovered ? 1.15 : isGlitching ? 1.18 : 1,
           opacity: isDissolving ? 0 : isHovered ? 0.92 : 0.65,
           x: mouseOffset.x * 3,
         }}
         transition={{ duration: 0.25, ease: "easeOut" }}
       />
 
-      {/* Atmospheric Volumetric Dust Haze */}
+      {/* Volumetric Dust Haze */}
       <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 h-[50vh] w-[50vw] max-w-[700px] rounded-full blur-[80px] opacity-30 bg-gradient-to-b from-[#FF1E40] to-transparent z-0" />
 
-      {/* Floating Portrait Scene Layer (Scale 1.25, object-fit contain) */}
+      {/* Floating Portrait Scene Container */}
       <motion.div
-        className="portrait-vignette-mask relative z-10 w-[90vw] max-w-[650px] h-[55vh] md:h-[65vh] lg:h-[70vh] pointer-events-none flex items-center justify-center"
+        className="portrait-vignette-mask relative z-10 w-[90vw] max-w-[650px] h-[55vh] md:h-[65vh] lg:h-[70vh] pointer-events-none flex items-center justify-center rounded-2xl overflow-hidden"
         style={{ willChange: "transform, opacity, filter" }}
         animate={{
           scale: isDissolving ? 1.3 : isPrepped ? 1.15 : isHovered ? 1.04 : 1,
@@ -113,35 +148,73 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
           rotateY: { type: "spring", stiffness: 220, damping: 20 },
         }}
       >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentIdentity.id}
-            initial={{ opacity: 0, scale: 1.28, filter: "blur(4px)" }}
-            animate={{ opacity: 1, scale: 1.25, filter: "blur(0px)" }}
-            exit={{ opacity: 0, scale: 1.22, filter: "blur(4px)" }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute inset-0 h-full w-full flex items-center justify-center pointer-events-none"
-            style={{ willChange: "transform, opacity, filter" }}
-          >
-            <Image
-              src={currentIdentity.image}
-              alt={currentIdentity.title}
-              fill
-              sizes="100vw"
-              priority
-              className="object-contain object-top filter contrast-[1.08] brightness-[0.98] saturate-[0.95] portrait-blend-image"
-            />
-          </motion.div>
-        </AnimatePresence>
+        {/* Strictly Clipped Portrait Wrapper */}
+        <div className="relative w-full h-full overflow-hidden flex items-center justify-center">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentIdentity.id}
+              initial={{
+                opacity: prefersReducedMotion ? 0 : 0,
+                scale: prefersReducedMotion ? 1.25 : 1.28,
+                filter: prefersReducedMotion ? "blur(0px)" : "blur(5px)",
+                x: chromaticFlash ? -3 : 0,
+              }}
+              animate={{
+                opacity: 1,
+                scale: 1.25,
+                filter: "blur(0px)",
+                x: 0,
+              }}
+              exit={{
+                opacity: 0,
+                scale: prefersReducedMotion ? 1.25 : 1.22,
+                filter: prefersReducedMotion ? "blur(0px)" : "blur(5px)",
+                x: chromaticFlash ? 3 : 0,
+              }}
+              transition={{
+                duration: prefersReducedMotion ? 0.4 : 0.75,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+              className="absolute inset-0 h-full w-full flex items-center justify-center pointer-events-none"
+              style={{ willChange: "transform, opacity, filter" }}
+            >
+              <Image
+                src={currentIdentity.image}
+                alt={currentIdentity.title}
+                fill
+                sizes="(max-width: 768px) 100vw, 650px"
+                priority
+                className={`object-contain object-top filter contrast-[1.08] brightness-[0.98] saturate-[0.95] portrait-blend-image transition-all duration-150 ${
+                  chromaticFlash ? "drop-shadow-[3px_0_0_rgba(255,30,64,0.7)] drop-shadow-[-3px_0_0_rgba(0,240,255,0.7)]" : ""
+                }`}
+              />
+            </motion.div>
+          </AnimatePresence>
 
-        {/* Glitch Distortion Overlay */}
-        {isGlitching && (
-          <div className="animate-glitch pointer-events-none absolute inset-0 z-20 overflow-hidden bg-accent-crimson/15 backdrop-blur-[2px]">
-            <div className="absolute inset-0 bg-[radial-gradient(#FF1E40_1px,transparent_1px)] [background-size:10px_10px] opacity-50" />
-            <div className="absolute top-1/3 h-[2px] w-full bg-white/80 shadow-[0_0_12px_#fff]" />
-            <div className="absolute top-2/3 h-[1px] w-full bg-accent-crimson shadow-[0_0_10px_#DC143C]" />
-          </div>
-        )}
+          {/* PROBLEM 1 & 2 FIX: Local Glitch Overlay — Clipped strictly inside Portrait Box */}
+          {isGlitching && !prefersReducedMotion && (
+            <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-2xl bg-[#FF1E40]/10 backdrop-blur-[1px]">
+              {/* Subtle Noise Texture (65% lower opacity than previous broadcast static) */}
+              <div className="absolute inset-0 bg-[radial-gradient(#FF1E40_1px,transparent_1px)] [background-size:12px_12px] opacity-15" />
+
+              {/* 3-4 Horizontal Scan-Line Breaks */}
+              {scanLines.map((line, idx) => (
+                <div
+                  key={idx}
+                  className="absolute w-full bg-white/70 shadow-[0_0_8px_rgba(255,255,255,0.8)]"
+                  style={{
+                    top: line.top,
+                    height: line.height,
+                    transform: `translateX(${line.offset})`,
+                  }}
+                />
+              ))}
+
+              {/* Brief Red Accent Horizon Line */}
+              <div className="absolute top-1/2 h-[1px] w-full bg-[#FF1E40]/70 shadow-[0_0_10px_#FF1E40]" />
+            </div>
+          )}
+        </div>
       </motion.div>
     </div>
   );

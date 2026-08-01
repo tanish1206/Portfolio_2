@@ -6,6 +6,7 @@ import { IdentityTransformer } from "./IdentityTransformer";
 import { IDENTITIES, Identity } from "@/data/identities";
 import { useCinematic } from "@/context/CinematicContext";
 import { HeroExperienceController } from "@/lib/HeroExperienceController";
+import { CameraReticle } from "@/components/ui/CameraReticle";
 
 export const HeroSection: React.FC = () => {
   const [activeIdentity, setActiveIdentity] = useState<Identity>(IDENTITIES[0]);
@@ -107,11 +108,11 @@ export const HeroSection: React.FC = () => {
             </span>
           </motion.div>
 
-          <div className="hidden md:block absolute left-1/4 top-1/2 -translate-y-1/2 z-10 text-accent-crimson/50 font-mono text-sm">
-            +
+          <div className="hidden md:block absolute left-1/4 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
+            <CameraReticle className="w-4 h-4 text-accent-crimson/60" />
           </div>
-          <div className="hidden md:block absolute right-1/4 top-1/2 -translate-y-1/2 z-10 text-accent-crimson/50 font-mono text-sm">
-            +
+          <div className="hidden md:block absolute right-1/4 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
+            <CameraReticle className="w-4 h-4 text-accent-crimson/60" />
           </div>
 
           {/* Center Intersecting Movie Poster Typography */}
@@ -135,7 +136,9 @@ export const HeroSection: React.FC = () => {
               transition={{ duration: 1, delay: 0.6 }}
               className="w-48 sm:w-64 md:w-80 h-[1px] bg-neutral-800 my-4 flex items-center justify-center"
             >
-              <span className="bg-[#050505] px-2 text-accent-crimson text-xs font-mono">✦</span>
+              <span className="bg-[#050505] px-2 text-accent-crimson flex items-center justify-center">
+                <CameraReticle className="w-3.5 h-3.5 text-accent-crimson" />
+              </span>
             </motion.div>
 
             <motion.div
