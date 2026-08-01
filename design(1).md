@@ -1,30 +1,38 @@
-# Design
+# Design System
 
 ## Mood
-Minimal · Cinematic · Architectural · Premium
+Minimal · Cinematic · Architectural · Crimson & Dark Industrial · Silent Luxury
 
-## Colors
-Background: #050505
-Surface: #111111
-Text: #F5F5F5
-Accent: Electric Blue
-Accent 2: Warm Gold
+## Color Palette
+- Background: `#050505` (Pure Black)
+- Surface: `#0D0D0D` (Charcoal)
+- Text Primary: `#FFFFFF`
+- Text Secondary: `#888888`
+- Accent Primary: `#DC143C` / `#FF1E40` (Deep Crimson Red)
+- Accent Muted: `#5A0E1A` (Crimson Haze)
+- **Strictly Prohibited**: Cyan, Blue, Purple, Neon, Starfields, HUD overlays.
+
+## Visual Reference & Atmosphere
+- Apple
+- A24
+- Luxury watch advertisement
+- Architectural photography
+- Dark museum installation
 
 ## Typography
-Headings: Space Grotesk
-Body: Inter
+- Headings & Names: Space Grotesk
+- Body & Labels: Inter / Mono
 
-## Hero
-One portrait.
-Large negative space.
-Soft spotlight.
+## Page Composition
+- Centered layout with massive negative space.
+- Single overhead soft crimson spotlight.
+- Borderless portrait seamlessly feathered into background darkness.
+- Minimal text:
+  - `Building ideas into reality.`
+  - Portrait
+  - `TANISH SONI`
+  - `AI Engineer • Full Stack Developer • Product Builder`
+  - `↓ Scroll to Begin`
 
-## Identity Sequence
-Builder
-Hackathon Engineer
-Full Stack Engineer
-AI Engineer
-Founder
-
-## Interaction
-Objects transform into stories.
+## Interaction Philosophy
+- Nothing simply appears. Everything transforms into something else.
