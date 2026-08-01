@@ -23,7 +23,7 @@ export const IDENTITIES: Identity[] = [
     title: "Hackathon Engineer",
     subtitle: "Turning complex challenges into working software in 24 hours.",
     quote: "Speed is the catalyst of breakthrough innovation.",
-    image: "/portraits/hackathon.png",
+    image: "/portraits/hackathon builder.png",
     accentColor: "#FF1E40",
     tags: ["National Wins", "Rapid Prototyping", "Pitching", "High Pressure"],
   },
@@ -32,7 +32,7 @@ export const IDENTITIES: Identity[] = [
     title: "Full Stack Engineer",
     subtitle: "Bridging frontend elegance with robust distributed backend pipelines.",
     quote: "Every interface is a promise; every backend keeps it.",
-    image: "/portraits/fullstack.png",
+    image: "/portraits/full stack engineer.png",
     accentColor: "#E60026",
     tags: ["Next.js", "Node.js", "Distributed Systems", "Database Design"],
   },
@@ -41,7 +41,7 @@ export const IDENTITIES: Identity[] = [
     title: "AI Engineer",
     subtitle: "Training models, fine-tuning agents, and crafting intelligent workflows.",
     quote: "Intelligence is not simulated—it's engineered.",
-    image: "/portraits/ai_engineer.png",
+    image: "/portraits/ai engineer.png",
     accentColor: "#FF2A4B",
     tags: ["LLM Agents", "PyTorch", "RAG Systems", "Predictive Analytics"],
   },
@@ -55,3 +55,4 @@ export const IDENTITIES: Identity[] = [
     tags: ["Product Vision", "0-to-1 Growth", "Strategy", "User Impact"],
   },
 ];
+
