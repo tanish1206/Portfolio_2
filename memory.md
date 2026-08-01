@@ -4,42 +4,22 @@
 Cinematic Interactive Portfolio for Tanish Soni ([https://tanish-soni.vercel.app/](https://tanish-soni.vercel.app/)) built with Next.js 14, React Three Fiber / Three.js, GSAP, and Framer Motion.
 
 ## Core Philosophy & Design Guidelines
-- **Not a portfolio, an interactive cinematic film.**
-- **Color Palette**: Black (`#050505`), Charcoal (`#111111`), White (`#FFFFFF`), Deep Crimson Red (`#c8281f` / `#DC143C` / `#FF1E40`). (NO cyan, NO purple, NO blue, NO neon).
-- **Aesthetics**: Apple, A24, luxury watch advertisement, architectural photography, dark minimal museum.
-- **Rule**: Nothing simply appears. Everything transforms into something else.
+- **Not a portfolio, an interactive cinematic architectural space.**
+- **Color Palette**: Primary Background (`#050505`), Secondary Background (`#101010`), Concrete Surface (`#1A1A1A`), Primary Text (`#FFFFFF`), Secondary Text (`#A8A8A8`), Primary Accent (`#B11226`), Hover Accent (`#D81E36`), Ambient Red (`rgba(177,18,38,0.15)`). (ZERO cyan or blue anywhere).
+- **Aesthetics**: Dark minimal underground architectural museum, premium art gallery, luxury exhibition space.
+- **Rule**: Objects become worlds. Worlds become stories. Lighting replaces navigation; curiosity replaces menus.
 
-## Exact Hero Visual Layout (Matched from Reference Image)
-1. **Top-Left Header**: `AI ENGINEER` / `FULL STACK DEVELOPER` / `HACKATHON BUILDER` / `PRODUCT BUILDER` + red accent bar.
-2. **Top-Right Header**: `01` / `BEGINNING` + red accent bar.
-3. **Left Margin**: Vertical `TANISH SONI` text with red glowing dot.
-4. **Right Margin**: Vertical `BUILDING IDEAS INTO REALITY.` text with red glowing dot.
-5. **Overhead Spotlight**: Dramatic top-center crimson radial beam shining down on head & shoulders.
-6. **Center Title**: Large wide-tracked `TANISH` (White) `SONI` (Crimson Red) overlapping chest level.
-7. **Divider**: Horizontal line with central red cross symbol `✦`.
-8. **Subtitle**: `BUILDING IDEAS INTO REALITY.` flanked by micro code snippets.
-9. **Scroll Cue**: `[ SCROLL TO BEGIN ]` in bracketed red text with vertical indicator line.
+## Phase 2 Architectural World Hub Implementation
+1. **Hero Entrance Section**: Intact. Portrait dissolve leads into a fly-through particle transition.
+2. **Underground Museum Environment (`WorldHubScene.tsx`)**: Polished black specular floor, concrete pillars, volumetric crimson dust particles, deep shadows.
+3. **Sequential Lighting Controller (`LightingController.tsx` & `WorldHubController.ts`)**:
+   - Exhibit 1: Mechanical Brass Compass (illuminated at start; everything else in darkness).
+   - Return from Career Compass unlocks Exhibit 2: Smart Bento Box (Campus Bites), then Exhibit 3: Vintage Studio Mic (HookLabs), etc.
+4. **Cinematographer Camera Controller (`CameraController.tsx`)**: Weighted lerp momentum, slow push, dolly, crane, orbit. Zero snapping.
+5. **Mechanical Brass Compass (`BrassCompass3D.tsx`)**:
+   - Detachable needle, openable glass bezel, fragmenting casing, synthesized Web Audio API sound feedback.
+   - Click transformation dollys camera into 3D drawn light pathways.
+6. **Career Compass 3D Reality (`CareerCompassWorld.tsx`)**: Interactive 3D trajectory lines, spatial octahedron nodes, HUD overlay, and seamless return vector back to World Hub.
 
-## Technical Specifications
-- **GSAP Timeline**: `gsap.timeline()` drives ~1.0s identity transition: Glitch Jitter (180ms) → Dissolve & Blur out (200ms) → Asset Swap → Reconstruct Blur-to-Sharp & Fade In (320ms).
-- **Accessibility & Motion**: Supports `prefers-reduced-motion` (disables parallax and glitch, uses simple crossfade).
-- **Mobile Responsiveness**: Scales name & portrait (`w-[420px] h-[520px]` on desktop), hides side HUD labels on small viewports, supports touch/tap triggers.
-- **Return Scroll Restoration**: Automatically restores Hero state (`HERO_IDLE`) when user scrolls back to the top of the page.
-=======
-## Identity Cycle
-1. **Builder** (`/portraits/builder.png`) - Accent: `#DC143C`
-2. **Hackathon Engineer** (`/portraits/hackathon.png`) - Accent: `#FF1E40`
-3. **Full Stack Engineer** (`/portraits/fullstack.png`) - Accent: `#E60026`
-4. **AI Engineer** (`/portraits/ai_engineer.png`) - Accent: `#FF2A4B`
-5. **Founder** (`/portraits/founder.png`) - Accent: `#D91438`
-
-## Progress & Chat Summary
-- **Hero Interaction Redesign (Finite State Machine)**:
-  - Re-architected Hero into a 6-stage finite state machine (`IDLE` -> `HOVER` -> `IDENTITY_CYCLE` -> `ACKNOWLEDGED` -> `ENTER_READY` -> `WORLD_TRANSITION`).
-  - Added 1.0s hover anticipation pause to prevent accidental fast scrolling.
-  - Implemented portrait acknowledgment click/tap pulse ("The portrait noticed me").
-  - `[ ENTER THE WORLD ]` CTA text unlocks after portrait acknowledgment or via 10s accessibility fallback timer.
-- **Build Status**: Verified and passing cleanly on Next.js 14.2.35.
-
-
-
+## Build Status
+- Verified cleanly on Next.js 14 production build (`npm run build`).
