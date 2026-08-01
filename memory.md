@@ -34,10 +34,10 @@ Cinematic Interactive Portfolio for Tanish Soni ([https://tanish-soni.vercel.app
 5. **Founder** (`/portraits/founder.png`) - Accent: `#D91438`
 
 ## Progress & Chat Summary
-- **Hero Redesign Completed**:
-  - Re-architected Hero layout to match cinematic reference composition (overhead crimson spotlight, borderless portrait, intersecting typography).
-  - Updated `IdentityTransformer.tsx` with feathered radial vignette mask, dark background edge blending (no cards), subtle 2° cursor tilt, and ~1.0s glitch/dissolve identity transitions.
-  - Implemented top HUD anchors (Active Role Title + `01 / BEGINNING`), wide-tracked centered tagline (`BUILDING IDEAS INTO REALITY.`), and slow-pulsing scroll cue.
-  - Enforced color palette strictly: `#050505` black, charcoal, white, deep crimson `#DC143C` / `#FF1E40`.
-- **Build Status**: Verified with Next.js build.
+- **Phase 2 — Hero Polish & Cinematic Transition Completed**:
+  - Implemented all 8 film atmosphere layers: animated film grain overlay, microscopic floating dust, volumetric fog drift, dynamic spotlight drift & breathing, 2–3% ambient red bounce light, edge vignette, handheld camera drift (0.6px), and lens scale breathing.
+  - Implemented 10-step GSAP scroll transition sequence in `GlobalCinematicController.tsx` listening for wheel, touch drag, keyboard down arrow, and click cues.
+  - Connected the 3D interactive world entry sequence featuring the illuminated Mechanical Brass Compass as the gateway object.
+- **Build Status**: Verified and passing cleanly on Next.js 14.2.35.
+
 

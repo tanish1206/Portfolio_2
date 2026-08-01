@@ -8,7 +8,7 @@ import { useCinematic } from "@/context/CinematicContext";
 
 export const HeroSection: React.FC = () => {
   const [activeIdentity, setActiveIdentity] = useState<Identity>(IDENTITIES[0]);
-  const { phase } = useCinematic();
+  const { phase, beginWorldTransition } = useCinematic();
 
   const isTransitioning = phase !== "HERO_IDLE";
 
