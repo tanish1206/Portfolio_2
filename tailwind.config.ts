@@ -3,22 +3,24 @@ import type { Config } from "tailwindcss";
 const config: Config = {
   content: [
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/cinematic/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
       colors: {
         background: "#050505",
-        surface: "#111111",
+        "background-secondary": "#101010",
+        surface: "#101010",
+        concrete: "#1A1A1A",
         "surface-border": "rgba(255, 255, 255, 0.08)",
-        "accent-crimson": "#DC143C",
-        "accent-crimson-bright": "#FF1E40",
+        "accent-crimson": "#B11226",
+        "accent-crimson-bright": "#D81E36",
         "accent-crimson-dark": "#5A0E1A",
-        "accent-blue": "#FF1E40", // Retain alias mapped to Crimson for legacy safety
-        "accent-gold": "#FFFFFF",
+        "accent-ambient": "rgba(177, 18, 38, 0.15)",
         "text-primary": "#FFFFFF",
-        "text-secondary": "#A0A0A0",
-        "text-muted": "#555555",
+        "text-secondary": "#A8A8A8",
+        "text-muted": "#666666",
       },
       fontFamily: {
         space: ["var(--font-space-grotesk)", "sans-serif"],

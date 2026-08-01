@@ -74,7 +74,6 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      onClick={() => HeroExperienceController.advanceIdentity()}
       className="interactive-hover absolute inset-0 w-full h-full flex items-center justify-center cursor-pointer select-none pointer-events-auto z-10"
     >
       {/* Volumetric Spotlight Beam */}
