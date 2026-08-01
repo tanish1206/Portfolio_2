@@ -6,43 +6,54 @@ import * as THREE from "three";
 
 /**
  * WorldLighting.tsx
- * Museum-grade lighting:
- *  - Warm crimson featured spotlight on the compass pedestal
- *  - Soft white rim fills from deep corners
- *  - Volumetric breathing intensity
- *  - Absolute darkness everywhere else
+ *
+ * Museum-grade cinematic lighting:
+ *  - Primary: deep red feature spotlight on compass pedestal
+ *  - Secondary: very dim white rim fills from the sides
+ *  - Architectural: warm amber accent from floor level
+ *  - Zero cyan. Zero neon. Zero futuristic.
+ *
+ * All spotlights breathe — nothing is static.
  */
 
-function BreathingSpotlight({
-  position,
-  target,
-  color,
-  baseIntensity,
-  breatheAmount = 0.2,
-  breatheSpeed = 0.6,
-  angle = 0.35,
-  penumbra = 0.7,
-  distance = 18,
-}: {
+interface BreathingSpotlightProps {
   position: [number, number, number];
-  target: [number, number, number];
+  targetPos: [number, number, number];
   color: string;
   baseIntensity: number;
-  breatheAmount?: number;
+  breatheAmp?: number;
   breatheSpeed?: number;
   angle?: number;
   penumbra?: number;
   distance?: number;
-}) {
+  castShadow?: boolean;
+}
+
+function BreathingSpotlight({
+  position,
+  targetPos,
+  color,
+  baseIntensity,
+  breatheAmp = 0.15,
+  breatheSpeed = 0.5,
+  angle = 0.3,
+  penumbra = 0.75,
+  distance = 22,
+  castShadow = false,
+}: BreathingSpotlightProps) {
   const lightRef = useRef<THREE.SpotLight>(null);
   const targetRef = useRef<THREE.Object3D>(null);
 
   useFrame(({ clock }) => {
     if (!lightRef.current) return;
     const t = clock.getElapsedTime();
-    lightRef.current.intensity = baseIntensity + Math.sin(t * breatheSpeed) * breatheAmount;
+    lightRef.current.intensity =
+      baseIntensity + Math.sin(t * breatheSpeed) * breatheAmp;
+    // Subtle position micro-drift for light rays
+    lightRef.current.position.x = position[0] + Math.sin(t * 0.18) * 0.08;
     if (targetRef.current) {
       lightRef.current.target = targetRef.current;
+      lightRef.current.target.updateMatrixWorld();
     }
   });
 
@@ -55,60 +66,89 @@ function BreathingSpotlight({
         angle={angle}
         penumbra={penumbra}
         distance={distance}
-        castShadow
-        shadow-mapSize={[1024, 1024]}
+        intensity={baseIntensity}
+        castShadow={castShadow}
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
         shadow-camera-near={0.5}
-        shadow-camera-far={25}
+        shadow-camera-far={30}
+        shadow-bias={-0.0005}
       />
-      {/* invisible target object */}
-      <object3D ref={targetRef} position={target} />
+      <object3D ref={targetRef} position={targetPos} />
     </>
   );
 }
 
-export const WorldLighting: React.FC<{ compassUnlocked: boolean }> = ({ compassUnlocked }) => {
+interface WorldLightingProps {
+  compassUnlocked: boolean;
+}
+
+export const WorldLighting: React.FC<WorldLightingProps> = ({ compassUnlocked }) => {
   return (
     <group>
-      {/* Absolute minimum ambient — keeps geometry from being invisible black silhouettes */}
-      <ambientLight intensity={0.08} color="#120608" />
+      {/* Absolute base ambient — just enough to see silhouettes, not fill */}
+      <ambientLight intensity={0.07} color="#0E0608" />
 
-      {/* Main feature spotlight — Compass pedestal. Warm crimson. Breathing. */}
+      {/* PRIMARY: Warm crimson feature spotlight over compass — the entire scene pivots around this */}
       {compassUnlocked && (
-        <BreathingSpotlight
-          position={[0, 11, 1.5]}
-          target={[0, 0.9, 0]}
-          color="#C41230"
-          baseIntensity={6.0}
-          breatheAmount={0.5}
-          breatheSpeed={0.55}
-          angle={0.22}
-          penumbra={0.65}
-          distance={22}
-        />
+        <>
+          {/* Main tight beam */}
+          <BreathingSpotlight
+            position={[0, 13.5, 1.2]}
+            targetPos={[0, 1.3, 0]}
+            color="#C01228"
+            baseIntensity={7.5}
+            breatheAmp={0.4}
+            breatheSpeed={0.45}
+            angle={0.18}
+            penumbra={0.6}
+            distance={20}
+            castShadow
+          />
+          {/* Wide soft halo around the exhibit zone — makes the floor glow red */}
+          <BreathingSpotlight
+            position={[0, 11, 0.5]}
+            targetPos={[0, 0, 0]}
+            color="#6A0A18"
+            baseIntensity={2.2}
+            breatheAmp={0.2}
+            breatheSpeed={0.3}
+            angle={0.55}
+            penumbra={1.0}
+            distance={18}
+          />
+        </>
       )}
 
-      {/* Very dim secondary warm key from left — reveals wall concrete texture */}
+      {/* SECONDARY: Faint cool white rim from far left — reveals wall & pillar silhouettes */}
       <pointLight
-        position={[-12, 7, -3]}
-        color="#6B2020"
-        intensity={0.9}
-        distance={22}
+        position={[-18, 8, 0]}
+        color="#F0EEE8"
+        intensity={0.22}
+        distance={30}
       />
-
-      {/* Even dimmer right rim fill */}
+      {/* Faint right rim */}
       <pointLight
-        position={[12, 5, -3]}
-        color="#4A1515"
-        intensity={0.55}
-        distance={20}
-      />
-
-      {/* Deep ceiling bounce — barely visible, gives sense of depth */}
-      <pointLight
-        position={[0, 14, -5]}
-        color="#1A0505"
-        intensity={0.3}
+        position={[18, 8, 0]}
+        color="#EDE8E0"
+        intensity={0.14}
         distance={28}
+      />
+
+      {/* ACCENT: Very dim warm amber from floor level — gives sense of grounded warmth */}
+      <pointLight
+        position={[0, 0.5, 0]}
+        color="#5A1A08"
+        intensity={0.35}
+        distance={8}
+      />
+
+      {/* Deep ceiling bounce — subtle depth cue */}
+      <pointLight
+        position={[0, 13.5, -4]}
+        color="#0E0303"
+        intensity={0.18}
+        distance={25}
       />
     </group>
   );
