@@ -2,6 +2,7 @@
 
 import React, { Suspense, useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
+import * as THREE from "three";
 import { WorldCamera } from "./WorldCamera";
 import { WorldLighting } from "./WorldLighting";
 import { WorldAtmosphere } from "./WorldAtmosphere";
@@ -67,7 +68,7 @@ export const WorldHubScene: React.FC = () => {
         antialias: true,
         alpha: false,
         powerPreference: "high-performance",
-        toneMapping: 2, // THREE.ACESFilmicToneMapping
+        toneMapping: THREE.ACESFilmicToneMapping,
         toneMappingExposure: 1.0,
       }}
       shadows

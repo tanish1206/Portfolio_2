@@ -13,23 +13,10 @@ export const GlobalCinematicController: React.FC = () => {
     stateRef.current = heroState;
   }, [heroState]);
 
-  // Synchronize scroll progress & automatically restore Hero when near top
+  // Page is fixed viewport — no scroll. Scroll progress stays 0.
   useEffect(() => {
-    const handleScroll = () => {
-      const totalHeight = document.body.scrollHeight - window.innerHeight;
-      if (totalHeight > 0) {
-        const progress = Math.min(1, Math.max(0, window.scrollY / totalHeight));
-        setScrollProgress(progress);
-      }
-
-      if (window.scrollY <= 10 && stateRef.current !== "DISCOVERY" && stateRef.current !== "BOOT" && stateRef.current !== "IDLE") {
-        resetToHero();
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [resetToHero, setScrollProgress]);
+    setScrollProgress(0);
+  }, [setScrollProgress]);
 
   // Event handlers for Wheel, Touch, and Keyboard
   useEffect(() => {
@@ -47,7 +34,7 @@ export const GlobalCinematicController: React.FC = () => {
           e.preventDefault();
           HeroExperienceController.startTransition();
         }
-      } else if (e.deltaY < 0 && window.scrollY <= 100 && current !== "DISCOVERY" && current !== "BOOT" && current !== "IDLE") {
+      } else if (e.deltaY < 0 && current !== "DISCOVERY" && current !== "BOOT" && current !== "IDLE" && current !== "WORLD_TRANSITION" && current !== "WORLD") {
         e.preventDefault();
         HeroExperienceController.reset();
       }

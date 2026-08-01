@@ -1,76 +1,92 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Interactive3DWorld } from "@/components/canvas/Interactive3DWorld";
+import { motion, AnimatePresence } from "framer-motion";
 import { HeroSection } from "@/components/hero/HeroSection";
-import { ProjectModal } from "@/components/projects/ProjectModal";
-import { AchievementHall } from "@/components/achievements/AchievementHall";
-import { ContactExperience } from "@/components/contact/ContactExperience";
-import { PROJECTS, ProjectData } from "@/data/projects";
 import { CinematicProvider, useCinematic } from "@/context/CinematicContext";
 import { GlobalCinematicController } from "@/components/cinematic/GlobalCinematicController";
-import { WorldHubController, WorldHubState } from "@/cinematic/controllers/WorldHubController";
-import { CareerCompassWorldOverlay } from "@/cinematic/Objects/CareerCompass/CareerCompassWorld";
+import { WorldHubScene } from "@/world/WorldHub/WorldHubScene";
+import { WorldController, WorldState } from "@/world/WorldController";
+import { CompassOverlay } from "@/world/Compass/CompassOverlay";
+
+/**
+ * page.tsx — The entire experience in one fixed viewport.
+ *
+ * Layer order (z-index):
+ *   0  — WorldHubScene (R3F Canvas) — fills full viewport, always rendering
+ *   10 — HeroSection — fades out on WORLD_TRANSITION
+ *   30 — CompassOverlay — fades in only when inside Career Compass world
+ */
 
 function PortfolioContent() {
-  const { scrollProgress, heroState } = useCinematic();
-  const [hubState, setHubState] = useState<WorldHubState>(WorldHubController.getState());
-  const [activeProject, setActiveProject] = useState<ProjectData | null>(null);
-  const [isAchievementHallOpen, setIsAchievementHallOpen] = useState(false);
-  const [isContactOpen, setIsContactOpen] = useState(false);
+  const { heroState } = useCinematic();
+  const [worldState, setWorldState] = useState<WorldState>(WorldController.getState());
 
+  // Subscribe to WorldController
   useEffect(() => {
-    const unsubscribe = WorldHubController.subscribe((state) => {
-      setHubState(state);
-    });
-    return () => unsubscribe();
+    return WorldController.subscribe(setWorldState);
   }, []);
 
-  // Update World Hub controller when Hero transition triggers
+  // Bridge: when Hero fires WORLD_TRANSITION → tell WorldController
   useEffect(() => {
-    if (heroState === "WORLD_TRANSITION" || heroState === "WORLD" || scrollProgress > 0.05) {
-      if (hubState.viewMode === "HERO") {
-        WorldHubController.enterWorldHubFromHero();
-      }
+    if (heroState === "WORLD_TRANSITION") {
+      WorldController.beginHeroExit();
     }
-  }, [heroState, scrollProgress, hubState.viewMode]);
+    if (heroState === "DISCOVERY" || heroState === "BOOT") {
+      WorldController.resetToHero();
+    }
+  }, [heroState]);
+
+  const heroVisible =
+    worldState.phase === "HERO" ||
+    worldState.phase === "FLY_THROUGH";
+
+  const compassOverlayVisible = worldState.phase === "CAREER_COMPASS";
 
   return (
-    <div className="relative min-h-screen w-full bg-[#050505] selection:bg-[#B11226] selection:text-white">
+    // Fixed root — fills the entire viewport. No scroll.
+    <div className="fixed inset-0 overflow-hidden bg-[#050505]">
       <GlobalCinematicController />
 
-      {/* Interactive 3D WebGL World Hub & Career Compass Canvas */}
-      <Interactive3DWorld scrollProgress={scrollProgress} onSelectObject={() => {}} />
-
-      {/* 1. Hero Entrance Section (Spotlight & Portrait Entrance) */}
-      <div
-        className={`relative z-10 transition-opacity duration-1000 ${
-          hubState.viewMode === "CAREER_COMPASS_WORLD" || hubState.viewMode === "PROJECT_WORLD"
-            ? "pointer-events-none opacity-0"
-            : "opacity-100"
-        }`}
-      >
-        <HeroSection />
+      {/* ── Layer 0: 3D World Hub Canvas (always rendering) ── */}
+      <div className="absolute inset-0 z-0">
+        <WorldHubScene />
       </div>
 
-      {/* 2. Career Compass 3D Reality Spatial Overlay */}
-      {hubState.viewMode === "CAREER_COMPASS_WORLD" && <CareerCompassWorldOverlay />}
+      {/* ── Layer 10: Hero Overlay (fades out as visitor enters museum) ── */}
+      <AnimatePresence>
+        {heroVisible && (
+          <motion.div
+            key="hero-overlay"
+            className="absolute inset-0 z-10"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{
+              duration: worldState.phase === "FLY_THROUGH" ? 1.6 : 0.4,
+              ease: "easeInOut",
+            }}
+          >
+            <HeroSection />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Legacy Modals for auxiliary exhibits if opened */}
-      <ProjectModal
-        project={activeProject}
-        onClose={() => setActiveProject(null)}
-      />
-
-      <AchievementHall
-        isOpen={isAchievementHallOpen}
-        onClose={() => setIsAchievementHallOpen(false)}
-      />
-
-      <ContactExperience
-        isOpen={isContactOpen}
-        onClose={() => setIsContactOpen(false)}
-      />
+      {/* ── Layer 30: Career Compass Spatial HUD ── */}
+      <AnimatePresence>
+        {compassOverlayVisible && (
+          <motion.div
+            key="compass-overlay"
+            className="absolute inset-0 z-30 pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.7 }}
+          >
+            <CompassOverlay />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
