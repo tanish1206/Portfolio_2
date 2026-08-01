@@ -87,6 +87,7 @@ export const HeroSection: React.FC = () => {
             scale: 1,
           }}
           transition={{ duration: 1.2, delay: 0.3 }}
+          style={{ willChange: "transform, opacity" }}
           className="relative z-10"
         >
           <IdentityTransformer onIdentityChange={setActiveIdentity} />
@@ -97,6 +98,7 @@ export const HeroSection: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: isTransitioning ? 0 : 1, y: 0 }}
           transition={{ duration: 1, delay: 0.5 }}
+          style={{ willChange: "transform, opacity" }}
           className="relative z-20 -mt-10 sm:-mt-14 md:-mt-18 lg:-mt-22 text-center pointer-events-none"
         >
           <h1 className="font-space text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-medium tracking-[0.22em] text-white uppercase drop-shadow-[0_12px_40px_rgba(0,0,0,0.95)]">
