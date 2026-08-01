@@ -34,10 +34,12 @@ Cinematic Interactive Portfolio for Tanish Soni ([https://tanish-soni.vercel.app
 5. **Founder** (`/portraits/founder.png`) - Accent: `#D91438`
 
 ## Progress & Chat Summary
-- **Phase 2 — Hero Polish & Cinematic Transition Completed**:
-  - Implemented all 8 film atmosphere layers: animated film grain overlay, microscopic floating dust, volumetric fog drift, dynamic spotlight drift & breathing, 2–3% ambient red bounce light, edge vignette, handheld camera drift (0.6px), and lens scale breathing.
-  - Implemented 10-step GSAP scroll transition sequence in `GlobalCinematicController.tsx` listening for wheel, touch drag, keyboard down arrow, and click cues.
-  - Connected the 3D interactive world entry sequence featuring the illuminated Mechanical Brass Compass as the gateway object.
+- **Hero Interaction Redesign (Finite State Machine)**:
+  - Re-architected Hero into a 6-stage finite state machine (`IDLE` -> `HOVER` -> `IDENTITY_CYCLE` -> `ACKNOWLEDGED` -> `ENTER_READY` -> `WORLD_TRANSITION`).
+  - Added 1.0s hover anticipation pause to prevent accidental fast scrolling.
+  - Implemented portrait acknowledgment click/tap pulse ("The portrait noticed me").
+  - `[ ENTER THE WORLD ]` CTA text unlocks after portrait acknowledgment or via 10s accessibility fallback timer.
 - **Build Status**: Verified and passing cleanly on Next.js 14.2.35.
+
 
 
