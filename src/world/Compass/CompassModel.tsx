@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, Suspense, useEffect } from "react";
+import React, { useRef, Suspense, useEffect, useMemo } from "react";
 import { useFrame, ThreeEvent } from "@react-three/fiber";
 import { useGLTF, Points } from "@react-three/drei";
 import * as THREE from "three";
@@ -9,66 +9,129 @@ import { WorldPhase } from "@/world/WorldController";
 /**
  * CompassModel.tsx
  *
- * Attempts to load compass.glb from /models/objects/compass.glb
- * Falls back to procedural geometry if the GLB is a placeholder or fails.
+ * Loads /models/objects/compass.glb (real 13MB model from user).
+ * Falls back to procedural geometry if GLB fails to load.
  *
- * States:
- *  MUSEUM_SETTLE / MUSEUM_IDLE — gentle idle: needle sway, micro float, dust halo
- *  COMPASS_HOVER               — tilts toward camera, needle jitter, dust intensifies
- *  COMPASS_TRANSFORM           — needle detach, glass lift, casing split
+ * GLB scale is auto-normalized: bounding box is measured and
+ * the model is scaled so it fits inside a ~1.2m sphere.
  */
 
-// ─── PBR Materials ─────────────────────────────────────────────────────────────
+// ─── PBR Materials for procedural fallback ────────────────────────────────────
 
 const brassMat = new THREE.MeshStandardMaterial({
-  color: "#8B6914",
-  roughness: 0.26,
+  color: "#9B7420",
+  roughness: 0.24,
   metalness: 0.96,
-  envMapIntensity: 1.4,
+  envMapIntensity: 1.6,
 });
-
 const antiqueBrassMat = new THREE.MeshStandardMaterial({
-  color: "#6B5010",
-  roughness: 0.36,
+  color: "#7A5E14",
+  roughness: 0.34,
   metalness: 0.90,
 });
-
 const darkDialMat = new THREE.MeshStandardMaterial({
   color: "#080508",
-  roughness: 0.20,
+  roughness: 0.18,
   metalness: 0.65,
 });
-
 const needleRedMat = new THREE.MeshStandardMaterial({
   color: "#B11226",
   emissive: "#8A0D1D",
-  emissiveIntensity: 0.55,
-  roughness: 0.28,
+  emissiveIntensity: 0.65,
+  roughness: 0.25,
   metalness: 0.75,
 });
-
 const needleSilverMat = new THREE.MeshStandardMaterial({
-  color: "#8A8A8A",
-  roughness: 0.18,
-  metalness: 0.96,
+  color: "#909090",
+  roughness: 0.16,
+  metalness: 0.97,
 });
-
 const glassMat = new THREE.MeshPhysicalMaterial({
-  color: "#B8D4E8",
+  color: "#C8E0F0",
   transparent: true,
-  opacity: 0.18,
-  roughness: 0.04,
+  opacity: 0.16,
+  roughness: 0.03,
   metalness: 0.0,
-  transmission: 0.88,
-  thickness: 0.25,
-  envMapIntensity: 2.0,
+  transmission: 0.90,
+  thickness: 0.3,
+  envMapIntensity: 2.5,
 });
-
 const engraveLineMat = new THREE.MeshStandardMaterial({
   color: "#3E2800",
   roughness: 0.85,
   metalness: 0.25,
 });
+
+// ─── Shared animation hook ────────────────────────────────────────────────────
+
+function useCompassAnimation(
+  groupRef: React.RefObject<THREE.Group>,
+  phase: WorldPhase,
+  extraUpdater?: (delta: number, t: number) => void
+) {
+  const isTransforming = phase === "COMPASS_TRANSFORM";
+  const isHovering = phase === "COMPASS_HOVER";
+
+  useFrame(({ clock }, delta) => {
+    const t = clock.getElapsedTime();
+    if (!groupRef.current) return;
+
+    if (isTransforming) {
+      groupRef.current.rotation.y += delta * 1.6;
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(
+        groupRef.current.rotation.x, 0.5, delta * 4
+      );
+    } else if (isHovering) {
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(
+        groupRef.current.rotation.x, 0.18, delta * 5
+      );
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(
+        groupRef.current.rotation.y, Math.sin(t * 1.5) * 0.12, delta * 5
+      );
+    } else {
+      // Idle micro-float
+      groupRef.current.position.y = Math.sin(t * 1.1) * 0.038;
+      groupRef.current.rotation.x = THREE.MathUtils.lerp(
+        groupRef.current.rotation.x, Math.sin(t * 0.45) * 0.035, delta * 2
+      );
+      groupRef.current.rotation.y = THREE.MathUtils.lerp(
+        groupRef.current.rotation.y, Math.sin(t * 0.28) * 0.055, delta * 2
+      );
+    }
+
+    extraUpdater?.(delta, t);
+  });
+}
+
+// ─── Dust halo particles (shared) ────────────────────────────────────────────
+
+function DustHalo({ active }: { active: boolean }) {
+  const positions = useMemo(() => {
+    const count = 160;
+    const pos = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const r = 0.7 + Math.random() * 1.1;
+      pos[i * 3 + 0] = Math.cos(angle) * r;
+      pos[i * 3 + 1] = (Math.random() - 0.5) * 1.0;
+      pos[i * 3 + 2] = Math.sin(angle) * r;
+    }
+    return pos;
+  }, []);
+
+  return (
+    <Points positions={positions} stride={3}>
+      <pointsMaterial
+        color={active ? "#D81E36" : "#C8A870"}
+        size={0.022}
+        transparent
+        opacity={active ? 0.85 : 0.45}
+        depthWrite={false}
+        sizeAttenuation
+      />
+    </Points>
+  );
+}
 
 // ─── GLB Compass ──────────────────────────────────────────────────────────────
 
@@ -83,60 +146,68 @@ function GLBCompass({
 }) {
   const { scene } = useGLTF("/models/objects/compass.glb");
   const groupRef = useRef<THREE.Group>(null);
-  const clonedScene = React.useMemo(() => scene.clone(), [scene]);
+  const sceneRef = useRef<THREE.Group>(null);
 
-  const isTransforming = phase === "COMPASS_TRANSFORM";
-  const isHovering = phase === "COMPASS_HOVER";
-  const isInteractive = phase === "MUSEUM_IDLE" || phase === "COMPASS_HOVER";
+  // Clone scene so multiple instances don't share state
+  const clonedScene = useMemo(() => scene.clone(true), [scene]);
 
-  // Apply PBR materials to loaded mesh
+  // Auto-normalize scale & enable shadows
   useEffect(() => {
-    clonedScene.traverse((child) => {
+    if (!sceneRef.current) return;
+
+    // Compute bounding box
+    const box = new THREE.Box3().setFromObject(sceneRef.current);
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    const maxDim = Math.max(size.x, size.y, size.z);
+
+    // Target: fit inside 1.1m sphere
+    const targetSize = 1.1;
+    if (maxDim > 0) {
+      const scale = targetSize / maxDim;
+      sceneRef.current.scale.setScalar(scale);
+    }
+
+    // Center model at origin
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+    sceneRef.current.position.set(-center.x, -center.y, -center.z);
+
+    // Enable shadows and enhance materials
+    sceneRef.current.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         const mesh = child as THREE.Mesh;
         mesh.castShadow = true;
         mesh.receiveShadow = true;
+        // Boost metalness and roughness for PBR look
+        if (mesh.material && !Array.isArray(mesh.material)) {
+          const mat = mesh.material as THREE.MeshStandardMaterial;
+          if (mat.metalness !== undefined) {
+            mat.metalness = Math.max(mat.metalness, 0.7);
+            mat.roughness = Math.min(mat.roughness, 0.45);
+          }
+        }
       }
     });
   }, [clonedScene]);
 
-  useFrame(({ clock }, delta) => {
-    if (!groupRef.current) return;
-    const t = clock.getElapsedTime();
+  const isInteractive = phase === "MUSEUM_IDLE" || phase === "COMPASS_HOVER";
+  const isHovering = phase === "COMPASS_HOVER";
 
-    if (isTransforming) {
-      groupRef.current.rotation.y += delta * 1.5;
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(
-        groupRef.current.rotation.x, 0.5, delta * 3.5
-      );
-    } else if (isHovering) {
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(
-        groupRef.current.rotation.x, 0.2, delta * 5
-      );
-      groupRef.current.rotation.y = THREE.MathUtils.lerp(
-        groupRef.current.rotation.y, Math.sin(t * 1.5) * 0.12, delta * 5
-      );
-    } else {
-      groupRef.current.position.y = Math.sin(t * 1.1) * 0.035;
-      groupRef.current.rotation.x = THREE.MathUtils.lerp(
-        groupRef.current.rotation.x, Math.sin(t * 0.5) * 0.035, delta * 2
-      );
-      groupRef.current.rotation.y = THREE.MathUtils.lerp(
-        groupRef.current.rotation.y, Math.sin(t * 0.28) * 0.055, delta * 2
-      );
-    }
-  });
+  useCompassAnimation(groupRef, phase);
 
   return (
     <group
       ref={groupRef}
       position={[0, 1.3, 0]}
-      scale={[0.8, 0.8, 0.8]}
       onPointerOver={isInteractive ? (e: ThreeEvent<PointerEvent>) => { e.stopPropagation(); onHover(true); } : undefined}
       onPointerOut={isInteractive ? () => onHover(false) : undefined}
       onClick={isInteractive ? (e: ThreeEvent<MouseEvent>) => { e.stopPropagation(); onClick(); } : undefined}
     >
-      <primitive object={clonedScene} />
+      <DustHalo active={isHovering} />
+      <group ref={sceneRef}>
+        <primitive object={clonedScene} />
+      </group>
     </group>
   );
 }
@@ -158,40 +229,12 @@ function ProceduralCompass({
   const casingTopRef = useRef<THREE.Mesh>(null);
   const casingBotRef = useRef<THREE.Mesh>(null);
 
-  const dustPos = React.useMemo(() => {
-    const count = 140;
-    const pos = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const r = 0.65 + Math.random() * 1.0;
-      pos[i * 3 + 0] = Math.cos(angle) * r;
-      pos[i * 3 + 1] = (Math.random() - 0.5) * 0.9;
-      pos[i * 3 + 2] = Math.sin(angle) * r;
-    }
-    return pos;
-  }, []);
-
   const isTransforming = phase === "COMPASS_TRANSFORM";
   const isHovering = phase === "COMPASS_HOVER";
   const isInteractive = phase === "MUSEUM_IDLE" || phase === "COMPASS_HOVER";
 
-  useFrame(({ clock }, delta) => {
-    const t = clock.getElapsedTime();
-
-    if (groupRef.current) {
-      if (isTransforming) {
-        groupRef.current.rotation.y += delta * 1.8;
-        groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, 0.55, delta * 4);
-      } else if (isHovering) {
-        groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, 0.22, delta * 5);
-        groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, Math.sin(t * 1.5) * 0.15, delta * 5);
-      } else {
-        groupRef.current.position.y = Math.sin(t * 1.2) * 0.04;
-        groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, Math.sin(t * 0.5) * 0.04, delta * 2);
-        groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, Math.sin(t * 0.3) * 0.06, delta * 2);
-      }
-    }
-
+  useCompassAnimation(groupRef, phase, (delta, t) => {
+    // Needle
     if (needleRef.current) {
       if (isTransforming) {
         needleRef.current.position.z = THREE.MathUtils.lerp(needleRef.current.position.z, 1.6, delta * 3.5);
@@ -208,7 +251,7 @@ function ProceduralCompass({
         needleRef.current.position.z = THREE.MathUtils.lerp(needleRef.current.position.z, 0.07, delta * 4);
       }
     }
-
+    // Glass
     if (glassRef.current) {
       if (isTransforming) {
         glassRef.current.position.z = THREE.MathUtils.lerp(glassRef.current.position.z, 1.9, delta * 3);
@@ -218,7 +261,7 @@ function ProceduralCompass({
         glassRef.current.rotation.x = THREE.MathUtils.lerp(glassRef.current.rotation.x, 0, delta * 4);
       }
     }
-
+    // Casing split
     if (casingTopRef.current && casingBotRef.current) {
       const target = isTransforming ? 0.95 : 0;
       casingTopRef.current.position.y = THREE.MathUtils.lerp(casingTopRef.current.position.y, target, delta * 3);
@@ -234,36 +277,23 @@ function ProceduralCompass({
       onPointerOut={isInteractive ? () => onHover(false) : undefined}
       onClick={isInteractive ? (e: ThreeEvent<MouseEvent>) => { e.stopPropagation(); onClick(); } : undefined}
     >
-      {/* Dust halo */}
-      <Points positions={dustPos} stride={3}>
-        <pointsMaterial
-          color={isHovering ? "#D81E36" : "#C8A870"}
-          size={0.02}
-          transparent
-          opacity={isHovering ? 0.8 : 0.42}
-          depthWrite={false}
-          sizeAttenuation
-        />
-      </Points>
+      <DustHalo active={isHovering} />
 
       {/* Outer Brass Bezel Ring */}
       <mesh ref={casingTopRef} castShadow>
         <torusGeometry args={[0.72, 0.09, 24, 64]} />
         <primitive object={brassMat} />
       </mesh>
-      {/* Casing body */}
       <mesh ref={casingBotRef} castShadow>
         <cylinderGeometry args={[0.70, 0.70, 0.11, 64]} />
         <primitive object={antiqueBrassMat} />
       </mesh>
-
-      {/* Dial face */}
       <mesh castShadow>
         <cylinderGeometry args={[0.66, 0.66, 0.025, 64]} />
         <primitive object={darkDialMat} />
       </mesh>
 
-      {/* Compass rose cardinal lines */}
+      {/* Cardinal lines */}
       {[0, 1, 2, 3].map((i) => (
         <mesh key={i} position={[0, 0.014, 0]} rotation={[0, (i * Math.PI) / 4, 0]}>
           <boxGeometry args={[0.003, 0.003, 1.28]} />
@@ -287,7 +317,7 @@ function ProceduralCompass({
         </mesh>
       </group>
 
-      {/* Glass bezel cover */}
+      {/* Glass cover */}
       <mesh ref={glassRef} position={[0, 0.014, 0.15]}>
         <cylinderGeometry args={[0.70, 0.70, 0.025, 64]} />
         <primitive object={glassMat} />
@@ -296,26 +326,23 @@ function ProceduralCompass({
   );
 }
 
-// ─── GLB Error Boundary ───────────────────────────────────────────────────────
+// ─── Error Boundary ───────────────────────────────────────────────────────────
 
-class GLBErrorBoundary extends React.Component<
+class GLBBoundary extends React.Component<
   { fallback: React.ReactNode; children: React.ReactNode },
-  { hasError: boolean }
+  { err: boolean }
 > {
   constructor(props: { fallback: React.ReactNode; children: React.ReactNode }) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { err: false };
   }
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
+  static getDerivedStateFromError() { return { err: true }; }
   render() {
-    if (this.state.hasError) return this.props.fallback;
-    return this.props.children;
+    return this.state.err ? this.props.fallback : this.props.children;
   }
 }
 
-// ─── CompassModel (public API) ────────────────────────────────────────────────
+// ─── Public API ───────────────────────────────────────────────────────────────
 
 interface CompassModelProps {
   phase: WorldPhase;
@@ -327,13 +354,12 @@ export const CompassModel: React.FC<CompassModelProps> = ({ phase, onHover, onCl
   const fallback = <ProceduralCompass phase={phase} onHover={onHover} onClick={onClick} />;
 
   return (
-    <GLBErrorBoundary fallback={fallback}>
+    <GLBBoundary fallback={fallback}>
       <Suspense fallback={fallback}>
         <GLBCompass phase={phase} onHover={onHover} onClick={onClick} />
       </Suspense>
-    </GLBErrorBoundary>
+    </GLBBoundary>
   );
 };
 
-// Preload hint for Next.js
 useGLTF.preload("/models/objects/compass.glb");

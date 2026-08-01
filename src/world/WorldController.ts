@@ -55,23 +55,23 @@ class WorldControllerClass {
     this.state.phase = "FLY_THROUGH";
     this.notify();
 
-    // After particle tunnel (~1.8s), begin museum crane-in
+    // After particle tunnel (~2s), begin museum reveal
     setTimeout(() => {
       this.state.phase = "MUSEUM_ENTER";
       this.notify();
-    }, 1800);
+    }, 2000);
 
-    // After crane (~3.5s total), settle on compass
+    // After crane-in (~3s more), begin settle
     setTimeout(() => {
       this.state.phase = "MUSEUM_SETTLE";
       this.notify();
-    }, 4500);
+    }, 5000);
 
-    // Museum idle: visitor is free to explore
+    // Final idle settle — visitor is free to explore
     setTimeout(() => {
       this.state.phase = "MUSEUM_IDLE";
       this.notify();
-    }, 6200);
+    }, 8200);
   }
 
   setHovered(id: string | null) {

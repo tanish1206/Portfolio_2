@@ -7,13 +7,16 @@ import * as THREE from "three";
 /**
  * WorldLighting.tsx
  *
- * Museum-grade cinematic lighting:
- *  - Primary: deep red feature spotlight on compass pedestal
- *  - Secondary: very dim white rim fills from the sides
- *  - Architectural: warm amber accent from floor level
- *  - Zero cyan. Zero neon. Zero futuristic.
+ * Museum-grade cinematic lighting.
+ * The key insight: the environment MUST be faintly visible so visitors
+ * understand they're inside a physical space. Total darkness hides the architecture.
  *
- * All spotlights breathe — nothing is static.
+ * Hierarchy:
+ *  1. Global ambient — just enough to see concrete silhouettes (~0.35)
+ *  2. Primary spotlight — tight crimson beam on compass pedestal
+ *  3. Wide red halo — fills floor zone with deep red glow
+ *  4. White rim fills — left/right, reveal pillar/wall edges
+ *  5. Warm floor bounce — grounding warmth from below
  */
 
 interface BreathingSpotlightProps {
@@ -49,8 +52,8 @@ function BreathingSpotlight({
     const t = clock.getElapsedTime();
     lightRef.current.intensity =
       baseIntensity + Math.sin(t * breatheSpeed) * breatheAmp;
-    // Subtle position micro-drift for light rays
-    lightRef.current.position.x = position[0] + Math.sin(t * 0.18) * 0.08;
+    // Micro position drift — makes light rays shift subtly
+    lightRef.current.position.x = position[0] + Math.sin(t * 0.18) * 0.06;
     if (targetRef.current) {
       lightRef.current.target = targetRef.current;
       lightRef.current.target.updateMatrixWorld();
@@ -86,70 +89,79 @@ interface WorldLightingProps {
 export const WorldLighting: React.FC<WorldLightingProps> = ({ compassUnlocked }) => {
   return (
     <group>
-      {/* Absolute base ambient — just enough to see silhouettes, not fill */}
-      <ambientLight intensity={0.07} color="#0E0608" />
+      {/*
+        Global ambient — critical: must be high enough that visitors
+        see the concrete walls, pillars, and floor.
+        This is a MUSEUM, not a black void.
+        0.38 gives dark-but-visible, like a real gallery at night.
+      */}
+      <ambientLight intensity={0.38} color="#1A0D0D" />
 
-      {/* PRIMARY: Warm crimson feature spotlight over compass — the entire scene pivots around this */}
+      {/* PRIMARY: Tight crimson feature spotlight — THE focal point */}
       {compassUnlocked && (
         <>
-          {/* Main tight beam */}
+          {/* Main narrow beam — sharp cone on pedestal */}
           <BreathingSpotlight
-            position={[0, 13.5, 1.2]}
+            position={[0, 13.2, 1.5]}
             targetPos={[0, 1.3, 0]}
-            color="#C01228"
-            baseIntensity={7.5}
-            breatheAmp={0.4}
-            breatheSpeed={0.45}
-            angle={0.18}
-            penumbra={0.6}
-            distance={20}
+            color="#CC1530"
+            baseIntensity={9.0}
+            breatheAmp={0.5}
+            breatheSpeed={0.42}
+            angle={0.20}
+            penumbra={0.55}
+            distance={22}
             castShadow
           />
-          {/* Wide soft halo around the exhibit zone — makes the floor glow red */}
+          {/* Wide halo — red floor glow around exhibit zone */}
           <BreathingSpotlight
-            position={[0, 11, 0.5]}
+            position={[0, 9, 1.0]}
             targetPos={[0, 0, 0]}
-            color="#6A0A18"
-            baseIntensity={2.2}
-            breatheAmp={0.2}
-            breatheSpeed={0.3}
-            angle={0.55}
+            color="#7A0F1E"
+            baseIntensity={3.5}
+            breatheAmp={0.3}
+            breatheSpeed={0.28}
+            angle={0.65}
             penumbra={1.0}
-            distance={18}
+            distance={20}
           />
         </>
       )}
 
-      {/* SECONDARY: Faint cool white rim from far left — reveals wall & pillar silhouettes */}
+      {/* White rim left — reveals left wall & pillar silhouettes */}
       <pointLight
-        position={[-18, 8, 0]}
-        color="#F0EEE8"
-        intensity={0.22}
+        position={[-16, 7, -3]}
+        color="#E8E0D5"
+        intensity={0.55}
+        distance={32}
+      />
+      {/* White rim right */}
+      <pointLight
+        position={[16, 7, -3]}
+        color="#DDD5C8"
+        intensity={0.40}
         distance={30}
       />
-      {/* Faint right rim */}
+
+      {/* Warm amber from floor level — grounding warmth */}
       <pointLight
-        position={[18, 8, 0]}
-        color="#EDE8E0"
-        intensity={0.14}
+        position={[0, 0.8, 2]}
+        color="#6B2A0A"
+        intensity={0.7}
+        distance={10}
+      />
+
+      {/* Very faint blue-cold ceiling fill — contrast to red warmth, gives depth */}
+      <pointLight
+        position={[0, 13, -6]}
+        color="#151522"
+        intensity={0.25}
         distance={28}
       />
 
-      {/* ACCENT: Very dim warm amber from floor level — gives sense of grounded warmth */}
-      <pointLight
-        position={[0, 0.5, 0]}
-        color="#5A1A08"
-        intensity={0.35}
-        distance={8}
-      />
-
-      {/* Deep ceiling bounce — subtle depth cue */}
-      <pointLight
-        position={[0, 13.5, -4]}
-        color="#0E0303"
-        intensity={0.18}
-        distance={25}
-      />
+      {/* Pillar accent lights — barely visible warm highlights */}
+      <pointLight position={[-6, 4, -8]} color="#3A1A08" intensity={0.4} distance={8} />
+      <pointLight position={[6, 4, -8]} color="#3A1A08" intensity={0.4} distance={8} />
     </group>
   );
 };

@@ -13,19 +13,16 @@ import { WorldController, WorldState } from "@/world/WorldController";
 /**
  * WorldHubScene.tsx
  *
- * The single persistent R3F Canvas for the entire portfolio world.
- * Always rendering — Hero is just an overlay that fades out.
+ * Single persistent R3F Canvas. Always rendering — Hero is just an overlay.
  *
- * Composition:
- *   Camera    → WorldCamera (per-phase lerped keyframes)
- *   Lighting  → WorldLighting (breathing crimson feature spotlight)
- *   Atmosphere → WorldAtmosphere (dust, fog, spotlight particles)
- *   Env       → Museum (procedural concrete/steel/stone architecture)
- *   Exhibit 1 → CompassPedestal + CompassModel
+ * Key settings:
+ *  - shadows="soft"  for soft shadow edges
+ *  - fog starts at 18m (lets us see full hall at 11m depth)
+ *  - ACESFilmic tonemapping, exposure 1.15 (brightens midtones)
+ *  - Museum loads during FLY_THROUGH so it's ready when camera arrives
  */
 
 function SceneContent({ state }: { state: WorldState }) {
-  // Museum & compass visible from FLY_THROUGH onward (loading during tunnel)
   const museumVisible = state.phase !== "HERO";
 
   return (
@@ -62,22 +59,23 @@ export const WorldHubScene: React.FC = () => {
 
   return (
     <Canvas
-      camera={{ position: [0, 1.8, 9], fov: 60, near: 0.1, far: 250 }}
+      camera={{ position: [0, 1.8, 9.5], fov: 60, near: 0.1, far: 300 }}
       gl={{
         antialias: true,
         alpha: false,
         powerPreference: "high-performance",
         toneMapping: THREE.ACESFilmicToneMapping,
-        toneMappingExposure: 1.1,
+        toneMappingExposure: 1.15,
       }}
       shadows="soft"
       dpr={[1, 1.5]}
     >
       {/*
-        Fog: warm deep red, starts at 14m and fully opaque by 60m.
-        This hides the far walls fading into darkness naturally.
+        Fog: starts at 18m, fully opaque at 70m.
+        Hall is ~14m deep from camera — so walls are visible.
+        Far walls dissolve into darkness naturally.
       */}
-      <fog attach="fog" args={["#080102", 14, 62]} />
+      <fog attach="fog" args={["#060102", 18, 70]} />
 
       <SceneContent state={worldState} />
     </Canvas>
