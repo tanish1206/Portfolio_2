@@ -12,14 +12,6 @@ import { WorldPhase } from "@/world/WorldController";
  * Dimensions: 25m wide × 15m high × 36m deep
  * Phased arrival material reveal animation.
  */
-
-"use client";
-
-import React, { useRef } from "react";
-import { useFrame } from "@react-three/fiber";
-import * as THREE from "three";
-import { WorldPhase } from "@/world/WorldController";
-
 interface MuseumProps {
   phase: WorldPhase;
   progress?: number;

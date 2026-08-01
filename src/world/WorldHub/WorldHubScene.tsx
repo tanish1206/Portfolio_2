@@ -23,19 +23,21 @@ import { WorldController, WorldState } from "@/world/WorldController";
  */
 
 function SceneContent({ state }: { state: WorldState }) {
-  const museumVisible = state.phase !== "HERO";
+  const museumVisible = state.constructionProgress > 0 || state.phase !== "HERO";
+  const p = state.constructionProgress;
 
   return (
     <>
-      <WorldCamera phase={state.phase} />
-      <WorldLighting phase={state.phase} compassUnlocked={state.unlockedExhibits >= 1} />
-      <WorldAtmosphere phase={state.phase} />
+      <WorldCamera phase={state.phase} progress={p} />
+      <WorldLighting phase={state.phase} progress={p} compassUnlocked={state.unlockedExhibits >= 1} />
+      <WorldAtmosphere phase={state.phase} progress={p} />
 
       {museumVisible && (
         <Suspense fallback={null}>
-          <Museum phase={state.phase} />
+          <Museum phase={state.phase} progress={p} />
           <CompassModel
             phase={state.phase}
+            progress={p}
             onHover={(hovered) => WorldController.setHovered(hovered ? "compass" : null)}
             onClick={() => {
               if (state.phase === "MUSEUM_IDLE" || state.phase === "COMPASS_HOVER") {

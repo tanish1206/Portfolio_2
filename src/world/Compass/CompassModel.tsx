@@ -137,10 +137,12 @@ function DustHalo({ active }: { active: boolean }) {
 
 function GLBCompass({
   phase,
+  progress = 0,
   onHover,
   onClick,
 }: {
   phase: WorldPhase;
+  progress?: number;
   onHover: (h: boolean) => void;
   onClick: () => void;
 }) {
@@ -155,31 +157,26 @@ function GLBCompass({
   useEffect(() => {
     if (!sceneRef.current) return;
 
-    // Compute bounding box
     const box = new THREE.Box3().setFromObject(sceneRef.current);
     const size = new THREE.Vector3();
     box.getSize(size);
     const maxDim = Math.max(size.x, size.y, size.z);
 
-    // Target: fit inside 1.1m sphere
     const targetSize = 1.1;
     if (maxDim > 0) {
       const scale = targetSize / maxDim;
       sceneRef.current.scale.setScalar(scale);
     }
 
-    // Center model at origin
     const center = new THREE.Vector3();
     box.getCenter(center);
     sceneRef.current.position.set(-center.x, -center.y, -center.z);
 
-    // Enable shadows and enhance materials
     sceneRef.current.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         const mesh = child as THREE.Mesh;
         mesh.castShadow = true;
         mesh.receiveShadow = true;
-        // Boost metalness and roughness for PBR look
         if (mesh.material && !Array.isArray(mesh.material)) {
           const mat = mesh.material as THREE.MeshStandardMaterial;
           if (mat.metalness !== undefined) {
@@ -195,6 +192,14 @@ function GLBCompass({
   const isHovering = phase === "COMPASS_HOVER";
 
   useCompassAnimation(groupRef, phase);
+
+  useFrame((_, delta) => {
+    if (!groupRef.current) return;
+    const lerpSpeed = Math.min(delta * 4, 1);
+    const assemblyProg = Math.min(1, Math.max(0, (progress - 0.88) / 0.12));
+    const targetScale = assemblyProg > 0 ? assemblyProg : 0.001;
+    groupRef.current.scale.setScalar(THREE.MathUtils.lerp(groupRef.current.scale.x, targetScale, lerpSpeed));
+  });
 
   return (
     <group
@@ -212,14 +217,14 @@ function GLBCompass({
   );
 }
 
-// ─── Procedural Compass (fallback) ────────────────────────────────────────────
-
 function ProceduralCompass({
   phase,
+  progress = 0,
   onHover,
   onClick,
 }: {
   phase: WorldPhase;
+  progress?: number;
   onHover: (h: boolean) => void;
   onClick: () => void;
 }) {
@@ -234,7 +239,14 @@ function ProceduralCompass({
   const isInteractive = phase === "MUSEUM_IDLE" || phase === "COMPASS_HOVER";
 
   useCompassAnimation(groupRef, phase, (delta, t) => {
-    // Needle
+    const assemblyProg = Math.min(1, Math.max(0, (progress - 0.88) / 0.12));
+
+    if (groupRef.current) {
+      const targetScale = assemblyProg > 0 ? assemblyProg : 0.001;
+      groupRef.current.scale.setScalar(THREE.MathUtils.lerp(groupRef.current.scale.x, targetScale, delta * 4));
+    }
+
+    // Assembly fragment positioning
     if (needleRef.current) {
       if (isTransforming) {
         needleRef.current.position.z = THREE.MathUtils.lerp(needleRef.current.position.z, 1.6, delta * 3.5);
@@ -243,11 +255,8 @@ function ProceduralCompass({
         needleRef.current.rotation.z = THREE.MathUtils.lerp(needleRef.current.rotation.z, Math.sin(t * 8) * 0.28, delta * 10);
         needleRef.current.position.z = THREE.MathUtils.lerp(needleRef.current.position.z, 0.08, delta * 5);
       } else {
-        needleRef.current.rotation.z = THREE.MathUtils.lerp(
-          needleRef.current.rotation.z,
-          Math.sin(t * 0.85) * 0.18 + Math.cos(t * 0.55) * 0.08,
-          delta * 3
-        );
+        const needleAngle = THREE.MathUtils.lerp(Math.PI * 2, Math.sin(t * 0.85) * 0.18 + Math.cos(t * 0.55) * 0.08, assemblyProg);
+        needleRef.current.rotation.z = THREE.MathUtils.lerp(needleRef.current.rotation.z, needleAngle, delta * 4);
         needleRef.current.position.z = THREE.MathUtils.lerp(needleRef.current.position.z, 0.07, delta * 4);
       }
     }
@@ -346,17 +355,18 @@ class GLBBoundary extends React.Component<
 
 interface CompassModelProps {
   phase: WorldPhase;
+  progress?: number;
   onHover: (isHovered: boolean) => void;
   onClick: () => void;
 }
 
-export const CompassModel: React.FC<CompassModelProps> = ({ phase, onHover, onClick }) => {
-  const fallback = <ProceduralCompass phase={phase} onHover={onHover} onClick={onClick} />;
+export const CompassModel: React.FC<CompassModelProps> = ({ phase, progress = 0, onHover, onClick }) => {
+  const fallback = <ProceduralCompass phase={phase} progress={progress} onHover={onHover} onClick={onClick} />;
 
   return (
     <GLBBoundary fallback={fallback}>
       <Suspense fallback={fallback}>
-        <GLBCompass phase={phase} onHover={onHover} onClick={onClick} />
+        <GLBCompass phase={phase} progress={progress} onHover={onHover} onClick={onClick} />
       </Suspense>
     </GLBBoundary>
   );

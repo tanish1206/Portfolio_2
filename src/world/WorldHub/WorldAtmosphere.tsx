@@ -176,11 +176,80 @@ function SpotlightDust() {
 
 interface WorldAtmosphereProps {
   phase?: WorldPhase;
+  progress?: number;
+}
+
+// ─── Construction Debris Stream (Active during Pillar Growth 20-35%) ───────────
+
+function ConstructionDebris({ progress = 0 }: { progress?: number }) {
+  const ref = useRef<THREE.Points>(null);
+  const matRef = useRef<THREE.PointsMaterial>(null);
+
+  const { positions, velocities } = useMemo<{ positions: Float32Array; velocities: Float32Array }>(() => {
+    const count = 450;
+    const pos = new Float32Array(count * 3);
+    const vel = new Float32Array(count * 3);
+
+    for (let i = 0; i < count; i++) {
+      pos[i * 3 + 0] = (Math.random() - 0.5) * 24;
+      pos[i * 3 + 1] = Math.random() * 14;
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 24;
+
+      vel[i * 3 + 0] = (Math.random() - 0.5) * 0.002;
+      vel[i * 3 + 1] = -(Math.random() * 0.008 + 0.003); // falling downward
+      vel[i * 3 + 2] = (Math.random() - 0.5) * 0.002;
+    }
+    return { positions: pos, velocities: vel };
+  }, []);
+
+  const geo = useMemo(() => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    return g;
+  }, [positions]);
+
+  useFrame((_, delta) => {
+    if (!ref.current || !matRef.current) return;
+    const isBuilding = progress >= 0.18 && progress <= 0.42;
+    const targetOpacity = isBuilding ? 0.65 : 0.0;
+
+    matRef.current.opacity = THREE.MathUtils.lerp(
+      matRef.current.opacity,
+      targetOpacity,
+      Math.min(delta * 4, 1)
+    );
+
+    if (matRef.current.opacity > 0.01) {
+      const posArr = ref.current.geometry.attributes.position.array as Float32Array;
+      const count = posArr.length / 3;
+      for (let i = 0; i < count; i++) {
+        posArr[i * 3 + 1] += velocities[i * 3 + 1];
+        if (posArr[i * 3 + 1] < 0.1) {
+          posArr[i * 3 + 1] = 14;
+        }
+      }
+      ref.current.geometry.attributes.position.needsUpdate = true;
+    }
+  });
+
+  return (
+    <points ref={ref} geometry={geo}>
+      <pointsMaterial
+        ref={matRef}
+        color="#B89A7A"
+        size={0.028}
+        transparent
+        opacity={0}
+        depthWrite={false}
+        sizeAttenuation
+      />
+    </points>
+  );
 }
 
 // ─── Transitional Particle Tunnel ─────────────────────────────────────────────
 
-function ParticleTunnel({ phase }: { phase?: WorldPhase }) {
+function ParticleTunnel({ phase, progress = 0 }: { phase?: WorldPhase; progress?: number }) {
   const ref = useRef<THREE.Points>(null);
   const matRef = useRef<THREE.PointsMaterial>(null);
 
@@ -198,7 +267,7 @@ function ParticleTunnel({ phase }: { phase?: WorldPhase }) {
 
       vel[i * 3 + 0] = 0;
       vel[i * 3 + 1] = 0;
-      vel[i * 3 + 2] = Math.random() * 0.4 + 0.2; // rushing backward relative to camera
+      vel[i * 3 + 2] = Math.random() * 0.4 + 0.2;
     }
     return { positions: pos, velocities: vel };
   }, []);
@@ -211,7 +280,7 @@ function ParticleTunnel({ phase }: { phase?: WorldPhase }) {
 
   useFrame((_, delta) => {
     if (!ref.current || !matRef.current) return;
-    const isTransitional = phase === "FLY_THROUGH" || phase === "DARK_TRAVERSE";
+    const isTransitional = progress > 0 && progress <= 0.15;
     const targetOpacity = isTransitional ? 0.75 : 0.0;
 
     matRef.current.opacity = THREE.MathUtils.lerp(
@@ -250,9 +319,10 @@ function ParticleTunnel({ phase }: { phase?: WorldPhase }) {
 
 // ─── Export ───────────────────────────────────────────────────────────────────
 
-export const WorldAtmosphere: React.FC<WorldAtmosphereProps> = ({ phase }) => (
+export const WorldAtmosphere: React.FC<WorldAtmosphereProps> = ({ phase, progress = 0 }) => (
   <group>
-    <ParticleTunnel phase={phase} />
+    <ParticleTunnel phase={phase} progress={progress} />
+    <ConstructionDebris progress={progress} />
     <FloatingDust />
     <GroundFog />
     <SpotlightDust />
