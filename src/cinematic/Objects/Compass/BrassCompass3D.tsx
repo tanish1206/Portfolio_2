@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, ThreeEvent } from "@react-three/fiber";
 import { Points, PointMaterial } from "@react-three/drei";
 import * as THREE from "three";
 import { AudioController } from "@/cinematic/controllers/AudioController";
@@ -99,13 +99,13 @@ export const BrassCompass3D: React.FC<BrassCompass3DProps> = ({
     }
   });
 
-  const handleClick = (e: THREE.Event) => {
+  const handleClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
     AudioController.playCompassTransformationSound();
     onClick();
   };
 
-  const handlePointerOver = (e: THREE.Event) => {
+  const handlePointerOver = (e: ThreeEvent<PointerEvent>) => {
     e.stopPropagation();
     if (!internalHover) {
       AudioController.playMetallicClick();
