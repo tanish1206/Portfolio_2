@@ -56,14 +56,28 @@ html, body {
   box-shadow: 0 8px 32px 0 rgba(220, 20, 60, 0.15);
 }
 
-/* Radial Feathered Mask & Vignette for Borderless Hero Portrait */
+/* Radial Feathered Mask & Vignette with Mix-Blend-Mode for Seamless Portrait Integration */
 .portrait-vignette-mask {
-  mask-image: radial-gradient(ellipse at 50% 40%, rgba(0,0,0,1) 45%, rgba(0,0,0,0.8) 75%, rgba(0,0,0,0) 100%);
-  -webkit-mask-image: radial-gradient(ellipse at 50% 40%, rgba(0,0,0,1) 45%, rgba(0,0,0,0.8) 75%, rgba(0,0,0,0) 100%);
+  position: relative;
+  mask-image: radial-gradient(ellipse at 50% 40%, rgba(0,0,0,1) 40%, rgba(0,0,0,0.85) 70%, rgba(0,0,0,0) 100%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 40%, rgba(0,0,0,1) 40%, rgba(0,0,0,0.85) 70%, rgba(0,0,0,0) 100%);
+}
+
+.portrait-blend-image {
+  mix-blend-mode: screen;
+}
+
+.portrait-vignette-mask::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 15;
+  background: radial-gradient(circle at 50% 35%, transparent 20%, rgba(5, 5, 5, 0.4) 60%, rgba(5, 5, 5, 1) 95%);
 }
 
 .bg-radial-vignette {
-  background: radial-gradient(ellipse at 50% 40%, transparent 30%, rgba(5, 5, 5, 0.6) 70%, rgba(5, 5, 5, 1) 100%);
+  background: radial-gradient(ellipse at 50% 40%, transparent 25%, rgba(5, 5, 5, 0.6) 65%, rgba(5, 5, 5, 1) 100%);
 }
 
 /* Glitch animation effects */

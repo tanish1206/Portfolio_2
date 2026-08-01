@@ -151,7 +151,7 @@ export const IdentityTransformer: React.FC<IdentityTransformerProps> = ({
               fill
               sizes="(max-width: 768px) 290px, (max-width: 1024px) 370px, 400px"
               priority
-              className="object-cover object-top filter contrast-[1.1] brightness-[0.92] saturate-[0.95]"
+              className="object-cover object-top filter contrast-[1.1] brightness-[0.95] saturate-[0.95] portrait-blend-image"
             />
           </motion.div>
         </AnimatePresence>
