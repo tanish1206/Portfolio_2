@@ -33,8 +33,8 @@ export function CompassPedestal({
       <mesh castShadow receiveShadow position={[0, 0.125, 0]}>
         <cylinderGeometry args={[1.15, 1.25, 0.25, 36]} />
         <meshStandardMaterial
-          color="#221E1F"
-          roughness={0.70}
+          color="#3A3435"
+          roughness={0.65}
           metalness={0.25}
           transparent
           opacity={opacity}
@@ -44,9 +44,9 @@ export function CompassPedestal({
       <mesh castShadow receiveShadow position={[0, 0.27, 0]}>
         <cylinderGeometry args={[1.12, 1.12, 0.04, 36]} />
         <meshStandardMaterial
-          color="#8C7040"
-          roughness={0.35}
-          metalness={0.85}
+          color="#C5A059"
+          roughness={0.30}
+          metalness={0.90}
           transparent
           opacity={opacity}
         />
@@ -55,9 +55,9 @@ export function CompassPedestal({
       <mesh castShadow receiveShadow position={[0, 0.75, 0]}>
         <cylinderGeometry args={[0.72, 0.78, 0.92, 36]} />
         <meshStandardMaterial
-          color="#332E2F"
-          roughness={0.80}
-          metalness={0.15}
+          color="#484243"
+          roughness={0.75}
+          metalness={0.18}
           transparent
           opacity={opacity}
         />
@@ -66,9 +66,9 @@ export function CompassPedestal({
       <mesh castShadow receiveShadow position={[0, 1.25, 0]}>
         <cylinderGeometry args={[0.82, 0.80, 0.08, 36]} />
         <meshStandardMaterial
-          color="#1F1C1D"
-          roughness={0.45}
-          metalness={0.75}
+          color="#2F292A"
+          roughness={0.40}
+          metalness={0.80}
           transparent
           opacity={opacity}
         />
@@ -77,7 +77,7 @@ export function CompassPedestal({
       <mesh receiveShadow position={[0, 1.292, 0]}>
         <cylinderGeometry args={[0.78, 0.78, 0.006, 36]} />
         <meshStandardMaterial
-          color="#141112"
+          color="#1F1A1B"
           roughness={0.15}
           metalness={0.90}
           transparent
@@ -194,8 +194,8 @@ export const Museum: React.FC<MuseumProps> = ({ phase, progress = 0 }) => {
           <planeGeometry args={[28, 46, 14, 23]} />
           <meshStandardMaterial
             ref={floorMatRef}
-            color="#1D1A1B"
-            roughness={0.24}
+            color="#2F2A2B"
+            roughness={0.25}
             metalness={0.45}
             transparent
             opacity={0}
@@ -206,13 +206,13 @@ export const Museum: React.FC<MuseumProps> = ({ phase, progress = 0 }) => {
         {[-10, -5, 0, 5, 10].map((x) => (
           <mesh key={`fseam-x-${x}`} position={[x, 0.002, 0]} rotation={[-Math.PI / 2, 0, 0]}>
             <planeGeometry args={[0.04, 46]} />
-            <meshStandardMaterial color="#6A5A3D" roughness={0.3} metalness={0.8} />
+            <meshStandardMaterial color="#B89855" roughness={0.3} metalness={0.85} />
           </mesh>
         ))}
         {[-18, -9, 0, 9, 18].map((z) => (
           <mesh key={`fseam-z-${z}`} position={[0, 0.002, z]} rotation={[-Math.PI / 2, 0, 0]}>
             <planeGeometry args={[28, 0.04]} />
-            <meshStandardMaterial color="#6A5A3D" roughness={0.3} metalness={0.8} />
+            <meshStandardMaterial color="#B89855" roughness={0.3} metalness={0.85} />
           </mesh>
         ))}
       </group>
@@ -223,13 +223,13 @@ export const Museum: React.FC<MuseumProps> = ({ phase, progress = 0 }) => {
         <group position={[0, 0, -23]}>
           <mesh position={[0, 7, 0]} receiveShadow castShadow>
             <boxGeometry args={[28, 14, 0.6]} />
-            <meshStandardMaterial color="#242021" roughness={0.85} metalness={0.10} />
+            <meshStandardMaterial color="#3A3435" roughness={0.80} metalness={0.10} />
           </mesh>
           {/* Vertical steel ribs on back wall */}
           {[-10, -5, 0, 5, 10].map((x) => (
             <mesh key={`bw-rib-${x}`} position={[x, 7, 0.35]}>
               <boxGeometry args={[0.25, 14, 0.15]} />
-              <meshStandardMaterial color="#181516" roughness={0.45} metalness={0.85} />
+              <meshStandardMaterial color="#221E1F" roughness={0.45} metalness={0.85} />
             </mesh>
           ))}
         </group>
@@ -238,12 +238,12 @@ export const Museum: React.FC<MuseumProps> = ({ phase, progress = 0 }) => {
         <group position={[-14, 0, 0]}>
           <mesh position={[0, 7, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow castShadow>
             <boxGeometry args={[46, 14, 0.6]} />
-            <meshStandardMaterial color="#221E1F" roughness={0.85} metalness={0.10} />
+            <meshStandardMaterial color="#363031" roughness={0.80} metalness={0.10} />
           </mesh>
           {/* Horizontal wall beam */}
           <mesh position={[0.35, 7, 0]} rotation={[0, Math.PI / 2, 0]}>
             <boxGeometry args={[46, 0.35, 0.15]} />
-            <meshStandardMaterial color="#181516" roughness={0.40} metalness={0.85} />
+            <meshStandardMaterial color="#221E1F" roughness={0.40} metalness={0.85} />
           </mesh>
         </group>
 
@@ -251,12 +251,12 @@ export const Museum: React.FC<MuseumProps> = ({ phase, progress = 0 }) => {
         <group position={[14, 0, 0]}>
           <mesh position={[0, 7, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow castShadow>
             <boxGeometry args={[46, 14, 0.6]} />
-            <meshStandardMaterial color="#221E1F" roughness={0.85} metalness={0.10} />
+            <meshStandardMaterial color="#363031" roughness={0.80} metalness={0.10} />
           </mesh>
           {/* Horizontal wall beam */}
           <mesh position={[-0.35, 7, 0]} rotation={[0, -Math.PI / 2, 0]}>
             <boxGeometry args={[46, 0.35, 0.15]} />
-            <meshStandardMaterial color="#181516" roughness={0.40} metalness={0.85} />
+            <meshStandardMaterial color="#221E1F" roughness={0.40} metalness={0.85} />
           </mesh>
         </group>
       </group>
@@ -268,22 +268,22 @@ export const Museum: React.FC<MuseumProps> = ({ phase, progress = 0 }) => {
             {/* Square base plinth */}
             <mesh position={[0, 0.15, 0]} castShadow receiveShadow>
               <boxGeometry args={[1.5, 0.3, 1.5]} />
-              <meshStandardMaterial color="#2D2829" roughness={0.80} metalness={0.20} />
+              <meshStandardMaterial color="#3E3839" roughness={0.75} metalness={0.20} />
             </mesh>
             {/* Octagonal concrete shaft */}
             <mesh position={[0, 7, 0]} castShadow receiveShadow>
               <cylinderGeometry args={[0.65, 0.75, 13.4, 8]} />
-              <meshStandardMaterial color="#3A3435" roughness={0.82} metalness={0.12} />
+              <meshStandardMaterial color="#504A4B" roughness={0.78} metalness={0.12} />
             </mesh>
             {/* Steel base collar */}
             <mesh position={[0, 0.35, 0]}>
               <cylinderGeometry args={[0.80, 0.80, 0.12, 16]} />
-              <meshStandardMaterial color="#54484A" roughness={0.35} metalness={0.80} />
+              <meshStandardMaterial color="#6E6264" roughness={0.35} metalness={0.80} />
             </mesh>
             {/* Steel capital bracket at ceiling joint */}
             <mesh position={[0, 13.8, 0]}>
               <boxGeometry args={[1.6, 0.4, 1.6]} />
-              <meshStandardMaterial color="#1A1718" roughness={0.45} metalness={0.88} />
+              <meshStandardMaterial color="#262223" roughness={0.45} metalness={0.88} />
             </mesh>
           </group>
         ))}
@@ -294,7 +294,7 @@ export const Museum: React.FC<MuseumProps> = ({ phase, progress = 0 }) => {
         {/* Main Ceiling Concrete Slab */}
         <mesh position={[0, 0.2, 0]} rotation={[Math.PI / 2, 0, 0]}>
           <planeGeometry args={[28, 46]} />
-          <meshStandardMaterial color="#1B1819" roughness={0.92} metalness={0.08} />
+          <meshStandardMaterial color="#2B2627" roughness={0.88} metalness={0.08} />
         </mesh>
 
         {/* Transverse Steel Trusses across width */}
@@ -303,18 +303,18 @@ export const Museum: React.FC<MuseumProps> = ({ phase, progress = 0 }) => {
             {/* Main top I-beam */}
             <mesh castShadow>
               <boxGeometry args={[28, 0.4, 0.3]} />
-              <meshStandardMaterial color="#1A1718" roughness={0.40} metalness={0.85} />
+              <meshStandardMaterial color="#221E1F" roughness={0.40} metalness={0.85} />
             </mesh>
             {/* Lower support rail */}
             <mesh position={[0, -0.6, 0]}>
               <boxGeometry args={[28, 0.2, 0.2]} />
-              <meshStandardMaterial color="#141213" roughness={0.40} metalness={0.85} />
+              <meshStandardMaterial color="#1C1819" roughness={0.40} metalness={0.85} />
             </mesh>
             {/* Diagonal web struts */}
             {[-12, -8, -4, 0, 4, 8, 12].map((xStrut) => (
               <mesh key={`strut-${xStrut}`} position={[xStrut, -0.3, 0]} rotation={[0, 0, Math.PI / 4]}>
                 <boxGeometry args={[0.8, 0.12, 0.12]} />
-                <meshStandardMaterial color="#1A1718" roughness={0.40} metalness={0.85} />
+                <meshStandardMaterial color="#221E1F" roughness={0.40} metalness={0.85} />
               </mesh>
             ))}
           </group>
@@ -324,7 +324,7 @@ export const Museum: React.FC<MuseumProps> = ({ phase, progress = 0 }) => {
         {[-10, 0, 10].map((x, idx) => (
           <mesh key={`long-beam-${idx}`} position={[x, -0.3, 0]}>
             <boxGeometry args={[0.3, 0.35, 46]} />
-            <meshStandardMaterial color="#181516" roughness={0.40} metalness={0.85} />
+            <meshStandardMaterial color="#201C1D" roughness={0.40} metalness={0.85} />
           </mesh>
         ))}
 
@@ -334,17 +334,17 @@ export const Museum: React.FC<MuseumProps> = ({ phase, progress = 0 }) => {
             {/* Mounting bracket */}
             <mesh position={[0, 0.1, 0]}>
               <boxGeometry args={[0.3, 0.2, 0.3]} />
-              <meshStandardMaterial color="#110F10" roughness={0.3} metalness={0.9} />
+              <meshStandardMaterial color="#1A1617" roughness={0.3} metalness={0.9} />
             </mesh>
             {/* Cylindrical housing */}
             <mesh position={[0, -0.3, 0]} rotation={[Math.PI / 6, 0, 0]}>
               <cylinderGeometry args={[0.32, 0.38, 0.6, 24]} />
-              <meshStandardMaterial color="#1E1B1C" roughness={0.35} metalness={0.85} />
+              <meshStandardMaterial color="#2C2627" roughness={0.35} metalness={0.85} />
             </mesh>
             {/* Glass lens cap */}
             <mesh position={[0, -0.58, 0.12]} rotation={[Math.PI / 6, 0, 0]}>
               <cylinderGeometry args={[0.34, 0.34, 0.04, 24]} />
-              <meshStandardMaterial color="#443D3F" roughness={0.10} metalness={0.95} />
+              <meshStandardMaterial color="#665D5F" roughness={0.10} metalness={0.95} />
             </mesh>
           </group>
         ))}
@@ -359,17 +359,17 @@ export const Museum: React.FC<MuseumProps> = ({ phase, progress = 0 }) => {
               {/* Heavy base */}
               <mesh position={[0, 0.04, 0]} castShadow>
                 <cylinderGeometry args={[0.22, 0.25, 0.08, 20]} />
-                <meshStandardMaterial color="#1C1819" roughness={0.35} metalness={0.85} />
+                <meshStandardMaterial color="#2A2425" roughness={0.35} metalness={0.85} />
               </mesh>
               {/* Post */}
               <mesh position={[0, 0.5, 0]} castShadow>
                 <cylinderGeometry args={[0.035, 0.035, 0.92, 16]} />
-                <meshStandardMaterial color="#2E282A" roughness={0.30} metalness={0.90} />
+                <meshStandardMaterial color="#3C3436" roughness={0.30} metalness={0.90} />
               </mesh>
               {/* Top brass ball cap */}
               <mesh position={[0, 0.98, 0]}>
                 <sphereGeometry args={[0.06, 16, 16]} />
-                <meshStandardMaterial color="#8C7040" roughness={0.30} metalness={0.88} />
+                <meshStandardMaterial color="#C5A059" roughness={0.30} metalness={0.88} />
               </mesh>
             </group>
           ))
@@ -379,7 +379,7 @@ export const Museum: React.FC<MuseumProps> = ({ phase, progress = 0 }) => {
         {[-3.5, 3.5].map((x) => (
           <mesh key={`bar-rail-z-${x}`} position={[x, 0.85, 0]} rotation={[Math.PI / 2, 0, 0]}>
             <cylinderGeometry args={[0.015, 0.015, 10, 12]} />
-            <meshStandardMaterial color="#2E282A" roughness={0.35} metalness={0.90} />
+            <meshStandardMaterial color="#3C3436" roughness={0.35} metalness={0.90} />
           </mesh>
         ))}
 
@@ -388,11 +388,11 @@ export const Museum: React.FC<MuseumProps> = ({ phase, progress = 0 }) => {
           <group key={`side-plinth-${idx}`} position={[x, y, z]}>
             <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
               <boxGeometry args={[1.4, 1.0, 1.4]} />
-              <meshStandardMaterial color="#262223" roughness={0.82} metalness={0.15} />
+              <meshStandardMaterial color="#383233" roughness={0.80} metalness={0.15} />
             </mesh>
             <mesh position={[0, 1.01, 0]}>
               <boxGeometry args={[1.3, 0.02, 1.3]} />
-              <meshStandardMaterial color="#181516" roughness={0.25} metalness={0.80} />
+              <meshStandardMaterial color="#201C1D" roughness={0.25} metalness={0.80} />
             </mesh>
           </group>
         ))}

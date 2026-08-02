@@ -12,7 +12,7 @@ import { WorldPhase } from "@/world/WorldController";
  * Strict Palette:
  *  - Primary Accent: Deep Cinematic Red (#B11226)
  *  - Secondary: Neutral White (#EAEAEA)
- *  - Ambient: Soft Indirect Lighting (#1C1617)
+ *  - Ambient: Warm Ivory / Indirect Shadow Fill (#D8C4B6 / #504648)
  *  - ZERO cyan or blue anywhere.
  */
 
@@ -24,6 +24,7 @@ interface WorldLightingProps {
 
 export const WorldLighting: React.FC<WorldLightingProps> = ({ phase, progress = 0 }) => {
   const ambientRef = useRef<THREE.AmbientLight>(null);
+  const dirLightRef = useRef<THREE.DirectionalLight>(null);
   const mainSpotRef = useRef<THREE.SpotLight>(null);
   const mainSpotTargetRef = useRef<THREE.Object3D>(null);
 
@@ -52,13 +53,23 @@ export const WorldLighting: React.FC<WorldLightingProps> = ({ phase, progress = 
     const p = progress;
     const lerpSpeed = Math.min(delta * 5, 1);
 
-    // 1. Ambient Light Progress (0.05 to 1.0)
-    // Low dark indirect light during build (0.25), smoothly warming to 0.45 for exhibition state
-    const targetAmbient = p < 0.65 ? 0.25 : 0.45;
+    // 1. Ambient & Directional Key Light Progress (0.05 to 1.0)
+    // Ensures concrete architecture is fully visible and physical
+    const targetAmbient = p < 0.65 ? 0.60 : 0.85;
+    const targetDirIntensity = 0.5 + p * 1.5;
+
     if (ambientRef.current) {
       ambientRef.current.intensity = THREE.MathUtils.lerp(
         ambientRef.current.intensity,
         targetAmbient,
+        lerpSpeed
+      );
+    }
+
+    if (dirLightRef.current) {
+      dirLightRef.current.intensity = THREE.MathUtils.lerp(
+        dirLightRef.current.intensity,
+        targetDirIntensity,
         lerpSpeed
       );
     }
@@ -73,8 +84,8 @@ export const WorldLighting: React.FC<WorldLightingProps> = ({ phase, progress = 
         const spotProg = Math.min(1, Math.max(0, (p - startP) / 0.04));
 
         // Base red spotlight intensity with subtle organic breathing
-        const baseIntensity = spotProg * 18.0;
-        const finalIntensity = baseIntensity > 0 ? baseIntensity + Math.sin(t * 0.5 + idx) * 0.8 : 0;
+        const baseIntensity = spotProg * 28.0;
+        const finalIntensity = baseIntensity > 0 ? baseIntensity + Math.sin(t * 0.5 + idx) * 1.2 : 0;
 
         spotLight.intensity = THREE.MathUtils.lerp(spotLight.intensity, finalIntensity, lerpSpeed);
         spotLight.target = targetObj;
@@ -88,7 +99,7 @@ export const WorldLighting: React.FC<WorldLightingProps> = ({ phase, progress = 
       const isSettling = Math.min(1, Math.max(0, (p - 0.95) / 0.05));
 
       const targetAngle = THREE.MathUtils.lerp(0.55, 0.32, isSettling);
-      const targetIntensity = spotIgnite * 26.0 + Math.sin(t * 0.4) * 1.2;
+      const targetIntensity = spotIgnite * 32.0 + Math.sin(t * 0.4) * 1.5;
 
       mainSpotRef.current.angle = THREE.MathUtils.lerp(mainSpotRef.current.angle, targetAngle, lerpSpeed);
       mainSpotRef.current.intensity = THREE.MathUtils.lerp(mainSpotRef.current.intensity, targetIntensity, lerpSpeed);
@@ -99,7 +110,7 @@ export const WorldLighting: React.FC<WorldLightingProps> = ({ phase, progress = 
 
     // 4. Soft Neutral White Rim Lights (65% to 75%)
     const rimProg = Math.min(1, Math.max(0, (p - 0.65) / 0.10));
-    const targetRimIntensity = rimProg * 3.5;
+    const targetRimIntensity = 1.0 + rimProg * 3.5;
 
     if (rimLeftRef.current) {
       rimLeftRef.current.intensity = THREE.MathUtils.lerp(rimLeftRef.current.intensity, targetRimIntensity, lerpSpeed);
@@ -114,8 +125,20 @@ export const WorldLighting: React.FC<WorldLightingProps> = ({ phase, progress = 
 
   return (
     <group>
-      {/* Soft Warm Indirect Ambient shadow fill — strictly dark concrete tone */}
-      <ambientLight ref={ambientRef} intensity={0.25} color="#1C1617" />
+      {/* Global Ambient — Warm Ivory fill for crystal-clear concrete visibility */}
+      <ambientLight ref={ambientRef} intensity={0.65} color="#D8C4B6" />
+
+      {/* Key Directional Architectural Sun Light — casts realistic shadows across pillars */}
+      <directionalLight
+        ref={dirLightRef}
+        position={[14, 24, 12]}
+        color="#F5E8D8"
+        intensity={1.2}
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        shadow-bias={-0.0003}
+      />
 
       {/* Primary Deep Cinematic Red Spotlight on Pedestal (Origin [0, 0, 0]) */}
       <spotLight
@@ -144,7 +167,7 @@ export const WorldLighting: React.FC<WorldLightingProps> = ({ phase, progress = 
             color="#B11226"
             angle={0.50}
             penumbra={0.80}
-            distance={30}
+            distance={32}
             intensity={0}
             castShadow
             shadow-mapSize-width={1024}
@@ -165,21 +188,21 @@ export const WorldLighting: React.FC<WorldLightingProps> = ({ phase, progress = 
         ref={rimLeftRef}
         position={[-13.5, 9, 0]}
         color="#EAEAEA"
-        intensity={0}
+        intensity={1.0}
         distance={35}
       />
       <pointLight
         ref={rimRightRef}
         position={[13.5, 9, 0]}
         color="#EAEAEA"
-        intensity={0}
+        intensity={1.0}
         distance={35}
       />
       <pointLight
         ref={rimBackRef}
         position={[0, 9, -22]}
         color="#EAEAEA"
-        intensity={0}
+        intensity={0.7}
         distance={35}
       />
     </group>

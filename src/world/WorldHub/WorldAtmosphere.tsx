@@ -9,63 +9,88 @@ import { WorldPhase } from "@/world/WorldController";
  * WorldAtmosphere.tsx
  *
  * Cinematic Atmospheric Effects:
- *  1. Translucent Volumetric Deep Red Light Shaft Cones (75%-85% progress)
+ *  1. Volumetric Red Dust Cones under Spotlights (75%-85% progress)
  *  2. Ground Fog Rolling Plane
  *  3. Construction Debris Dust Stream (20%-50% pillar/wall growth)
  *  4. Floating Ambient Dust Particles
  *  5. Particle Tunnel transition (0%-10% hero dissolve)
  */
 
-// ─── Volumetric Light Shaft Cones ─────────────────────────────────────────────
+// ─── Volumetric Red Spotlight Rays & Dust ──────────────────────────────────────
 
-function VolumetricLightShafts({ progress = 0 }: { progress?: number }) {
-  const groupRef = useRef<THREE.Group>(null);
+function VolumetricLightRays({ progress = 0 }: { progress?: number }) {
+  const ref = useRef<THREE.Points>(null);
+  const matRef = useRef<THREE.PointsMaterial>(null);
 
-  const shaftPositions: [number, number, number][] = useMemo(
-    () => [
-      [0, 6.75, -18],
-      [0, 6.75, -9],
-      [0, 6.75, 0],
-      [0, 6.75, 9],
-      [0, 6.75, 18],
-    ],
-    []
-  );
+  const { positions, baseHeights } = useMemo(() => {
+    const count = 750;
+    const pos = new Float32Array(count * 3);
+    const baseH = new Float32Array(count);
+
+    // 5 Spotlight cone positions along central aisle: z = [-18, -9, 0, 9, 18]
+    const spotlightZs = [-18, -9, 0, 9, 18];
+
+    for (let i = 0; i < count; i++) {
+      const spotIdx = i % 5;
+      const spotZ = spotlightZs[spotIdx];
+      const angle = Math.random() * Math.PI * 2;
+      const h = Math.random() * 12.5; // height within light shaft (0 to 12.5m)
+      const r = Math.random() * (0.2 + (h / 12.5) * 2.8); // cone radius widening downward
+
+      pos[i * 3 + 0] = Math.cos(angle) * r;
+      pos[i * 3 + 1] = 13.2 - h;
+      pos[i * 3 + 2] = spotZ + Math.sin(angle) * r;
+
+      baseH[i] = h;
+    }
+
+    return { positions: pos, baseHeights: baseH };
+  }, []);
+
+  const geo = useMemo(() => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    return g;
+  }, [positions]);
 
   useFrame(({ clock }, delta) => {
-    if (!groupRef.current) return;
+    if (!ref.current || !matRef.current) return;
     const t = clock.getElapsedTime();
     const lerpSpeed = Math.min(delta * 4, 1);
 
     // Fade in during ATMOSPHERE_EMERGENCE (75% to 85%)
     const atmoProg = Math.min(1, Math.max(0, (progress - 0.70) / 0.15));
-    const targetOpacity = atmoProg * 0.12;
+    const targetOpacity = atmoProg * 0.65;
 
-    groupRef.current.children.forEach((mesh, idx) => {
-      const mat = (mesh as THREE.Mesh).material as THREE.MeshBasicMaterial;
-      if (mat) {
-        const breathe = Math.sin(t * 0.6 + idx * 1.2) * 0.02;
-        mat.opacity = THREE.MathUtils.lerp(mat.opacity, Math.max(0, targetOpacity + breathe), lerpSpeed);
+    matRef.current.opacity = THREE.MathUtils.lerp(matRef.current.opacity, targetOpacity, lerpSpeed);
+
+    if (matRef.current.opacity > 0.01) {
+      const posArr = ref.current.geometry.attributes.position.array as Float32Array;
+      const count = posArr.length / 3;
+
+      for (let i = 0; i < count; i++) {
+        posArr[i * 3 + 1] -= 0.003; // fall slowly through light shaft
+        if (posArr[i * 3 + 1] < 0.2) {
+          posArr[i * 3 + 1] = 13.0;
+        }
       }
-    });
+      ref.current.geometry.attributes.position.needsUpdate = true;
+      ref.current.rotation.y = Math.sin(t * 0.06) * 0.03;
+    }
   });
 
   return (
-    <group ref={groupRef}>
-      {shaftPositions.map(([x, y, z], idx) => (
-        <mesh key={`shaft-${idx}`} position={[x, y, z]}>
-          <cylinderGeometry args={[0.35, 3.8, 13.5, 32, 1, true]} />
-          <meshBasicMaterial
-            color="#B11226"
-            transparent
-            opacity={0}
-            depthWrite={false}
-            blending={THREE.AdditiveBlending}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
-      ))}
-    </group>
+    <points ref={ref} geometry={geo}>
+      <pointsMaterial
+        ref={matRef}
+        color="#FF1E40"
+        size={0.032}
+        transparent
+        opacity={0}
+        depthWrite={false}
+        sizeAttenuation
+      />
+    </points>
   );
 }
 
@@ -145,7 +170,7 @@ function GroundFog({ progress = 0 }: { progress?: number }) {
 
     // Roll fog across floor starting at 75% progress
     const fogProg = Math.min(1, Math.max(0, (progress - 0.70) / 0.15));
-    const targetOpacity = fogProg * (0.12 + Math.sin(t * 0.22) * 0.03);
+    const targetOpacity = fogProg * (0.08 + Math.sin(t * 0.22) * 0.02);
 
     matRef.current.opacity = THREE.MathUtils.lerp(matRef.current.opacity, targetOpacity, lerpSpeed);
     ref.current.rotation.z = t * 0.005;
@@ -162,66 +187,6 @@ function GroundFog({ progress = 0 }: { progress?: number }) {
         depthWrite={false}
       />
     </mesh>
-  );
-}
-
-// ─── Spotlight Dust Catchers ──────────────────────────────────────────────────
-
-function SpotlightDust() {
-  const ref = useRef<THREE.Points>(null);
-
-  const positions = useMemo(() => {
-    const count = 400;
-    const pos = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const r = Math.random() * 1.5;
-      const h = Math.random() * 12;
-      pos[i * 3 + 0] = Math.cos(angle) * r * (h / 12);
-      pos[i * 3 + 1] = h + 1.2;
-      pos[i * 3 + 2] = Math.sin(angle) * r * (h / 12);
-    }
-    return pos;
-  }, []);
-
-  const geo = useMemo(() => {
-    const g = new THREE.BufferGeometry();
-    g.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    return g;
-  }, [positions]);
-
-  useFrame(({ clock }) => {
-    if (!ref.current) return;
-    const pos = ref.current.geometry.attributes.position.array as Float32Array;
-    const t = clock.getElapsedTime();
-    const count = pos.length / 3;
-
-    for (let i = 0; i < count; i++) {
-      pos[i * 3 + 1] -= 0.0025;
-      if (pos[i * 3 + 1] < 1.2) {
-        const angle = Math.random() * Math.PI * 2;
-        const h = 11 + Math.random() * 2;
-        const r = Math.random() * 1.5;
-        pos[i * 3 + 0] = Math.cos(angle) * r * (h / 13);
-        pos[i * 3 + 1] = h;
-        pos[i * 3 + 2] = Math.sin(angle) * r * (h / 13);
-      }
-    }
-    ref.current.geometry.attributes.position.needsUpdate = true;
-    ref.current.rotation.y = Math.sin(t * 0.08) * 0.05;
-  });
-
-  return (
-    <points ref={ref} geometry={geo}>
-      <pointsMaterial
-        color="#B11226"
-        size={0.028}
-        transparent
-        opacity={0.55}
-        depthWrite={false}
-        sizeAttenuation
-      />
-    </points>
   );
 }
 
@@ -368,7 +333,6 @@ export const WorldAtmosphere: React.FC<WorldAtmosphereProps> = ({ progress = 0 }
     <ConstructionDebris progress={progress} />
     <FloatingDust />
     <GroundFog progress={progress} />
-    <VolumetricLightShafts progress={progress} />
-    <SpotlightDust />
+    <VolumetricLightRays progress={progress} />
   </group>
 );

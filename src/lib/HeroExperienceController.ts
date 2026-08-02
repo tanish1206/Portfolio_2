@@ -85,12 +85,12 @@ class HeroExperienceControllerClass {
       this.hoverTimer = null;
     }
 
-    // Immediately acknowledge hover state; schedule photo advance after 350ms
+    // Immediately acknowledge hover state; schedule photo advance after 100ms for seamless hover response
     this.hoverTimer = setTimeout(() => {
       if (this.isHovered) {
         this.advanceIdentity();
       }
-    }, 350);
+    }, 100);
   }
 
   public onHoverLeave() {
