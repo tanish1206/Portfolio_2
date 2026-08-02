@@ -196,7 +196,7 @@ function GLBCompass({
   useFrame((_, delta) => {
     if (!groupRef.current) return;
     const lerpSpeed = Math.min(delta * 4, 1);
-    const assemblyProg = Math.min(1, Math.max(0, (progress - 0.88) / 0.12));
+    const assemblyProg = Math.min(1, Math.max(0, (progress - 0.95) / 0.05));
     const targetScale = assemblyProg > 0 ? assemblyProg : 0.001;
     groupRef.current.scale.setScalar(THREE.MathUtils.lerp(groupRef.current.scale.x, targetScale, lerpSpeed));
   });
@@ -239,7 +239,7 @@ function ProceduralCompass({
   const isInteractive = phase === "MUSEUM_IDLE" || phase === "COMPASS_HOVER";
 
   useCompassAnimation(groupRef, phase, (delta, t) => {
-    const assemblyProg = Math.min(1, Math.max(0, (progress - 0.88) / 0.12));
+    const assemblyProg = Math.min(1, Math.max(0, (progress - 0.95) / 0.05));
 
     if (groupRef.current) {
       const targetScale = assemblyProg > 0 ? assemblyProg : 0.001;

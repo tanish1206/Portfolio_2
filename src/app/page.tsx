@@ -9,26 +9,39 @@ import { WorldHubScene } from "@/world/WorldHub/WorldHubScene";
 import { WorldController, WorldState } from "@/world/WorldController";
 import { CompassOverlay } from "@/world/Compass/CompassOverlay";
 
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(ScrollTrigger);
+}
+
 function PortfolioContent() {
   const { heroState } = useCinematic();
   const [worldState, setWorldState] = useState<WorldState>(WorldController.getState());
+  const containerRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     return WorldController.subscribe(setWorldState);
   }, []);
 
-  // Listen to window scroll and map normalized scroll position to construction progress (0.0 to 1.0)
+  // GSAP ScrollTrigger timeline driving master construction progress
   useEffect(() => {
-    const handleScroll = () => {
-      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      if (maxScroll <= 0) return;
-      const progress = Math.min(1, Math.max(0, window.scrollY / maxScroll));
-      WorldController.setConstructionProgress(progress);
-    };
+    if (!containerRef.current) return;
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll(); // Initial check
-    return () => window.removeEventListener("scroll", handleScroll);
+    const ctx = gsap.context(() => {
+      ScrollTrigger.create({
+        trigger: containerRef.current,
+        start: "top top",
+        end: "bottom bottom",
+        scrub: 0.4,
+        onUpdate: (self) => {
+          WorldController.setConstructionProgress(self.progress);
+        },
+      });
+    }, containerRef);
+
+    return () => ctx.revert();
   }, []);
 
   // Sync Hero state trigger to WorldController
@@ -52,7 +65,7 @@ function PortfolioContent() {
   const compassOverlayVisible = worldState.phase === "CAREER_COMPASS";
 
   return (
-    <div className="relative min-h-[600vh] w-full bg-[#050505] selection:bg-accent-crimson selection:text-white">
+    <div ref={containerRef} className="relative min-h-[600vh] w-full bg-[#050505] selection:bg-accent-crimson selection:text-white">
       <GlobalCinematicController />
 
       {/* Layer 0: Persistent 3D R3F Canvas Fixed to Viewport */}

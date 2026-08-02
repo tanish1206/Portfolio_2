@@ -5,20 +5,21 @@
  */
 
 export type WorldPhase =
-  | "HERO"              // Hero section active (0% progress)
-  | "FLY_THROUGH"       // Particles & dark tunnel (0% - 10%)
-  | "FLOOR_REVEAL"      // Floor assembling from particles outward (10% - 20%)
-  | "PILLARS_FADE"      // Concrete pillars physically growing upward (20% - 35%)
-  | "WALLS_BEAMS"       // Concrete walls extrude & steel beams lower (35% - 50%)
-  | "SPOTLIGHT_ON"      // Red spotlights ignite sequentially (50% - 65%)
-  | "ATMOSPHERE_EMERGENCE" // Volumetric fog & floating dust illuminate (65% - 80%)
-  | "PEDESTAL_EMERGENCE"// Circular stone pedestal mechanically rises (80% - 90%)
-  | "COMPASS_ASSEMBLY"  // Mechanical brass compass fragments fly & assemble (90% - 99%)
-  | "MUSEUM_IDLE"       // World construction complete (100%), pure architectural silence
-  | "COMPASS_HOVER"     // Visitor hover over compass
-  | "COMPASS_TRANSFORM" // Disassemble animation into project world
-  | "CAREER_COMPASS"    // Inside Career Compass world
-  | "RETURNING";        // Camera pull-back
+  | "HERO"                  // Hero section active (0% progress)
+  | "FLY_THROUGH"           // Portrait dissolves, dark void & particles (0% - 10%)
+  | "FLOOR_REVEAL"          // Polished dark concrete floor grows physically outward (10% - 20%)
+  | "PILLARS_FADE"          // Structural pillars rise vertically in staggered sequence (20% - 35%)
+  | "WALLS_BEAMS"           // Wall panels extrude & steel support beams appear (35% - 50%)
+  | "CEILING_STRUCTURE"     // Steel trusses & ceiling panels assemble, fixtures descend (50% - 65%)
+  | "SPOTLIGHT_ON"          // Red spotlights ignite sequentially & white rim lights turn on (65% - 75%)
+  | "ATMOSPHERE_EMERGENCE"  // Volumetric fog rolls, light shafts & drifting dust (75% - 85%)
+  | "ARCHITECTURAL_PROPS"   // Steel barriers, plinths, cables, and trims solidify (85% - 95%)
+  | "PEDESTAL_EMERGENCE"    // Circular stone pedestal mechanically rises & Compass assembles (95% - 99%)
+  | "MUSEUM_IDLE"           // World construction complete (100%), pure architectural space
+  | "COMPASS_HOVER"         // Visitor hover over compass
+  | "COMPASS_TRANSFORM"     // Disassemble animation into project world
+  | "CAREER_COMPASS"        // Inside Career Compass world
+  | "RETURNING";            // Camera pull-back
 
 export interface WorldState {
   phase: WorldPhase;
@@ -58,7 +59,7 @@ class WorldControllerClass {
 
   /**
    * Directly updates normalized construction progress (0.0 to 1.0)
-   * mapped from scroll movement.
+   * mapped from GSAP scroll movement.
    */
   setConstructionProgress(progress: number) {
     const p = Math.max(0, Math.min(1, progress));
@@ -80,13 +81,15 @@ class WorldControllerClass {
     } else if (p <= 0.50) {
       this.state.phase = "WALLS_BEAMS";
     } else if (p <= 0.65) {
+      this.state.phase = "CEILING_STRUCTURE";
+    } else if (p <= 0.75) {
       this.state.phase = "SPOTLIGHT_ON";
-    } else if (p <= 0.80) {
+    } else if (p <= 0.85) {
       this.state.phase = "ATMOSPHERE_EMERGENCE";
-    } else if (p <= 0.90) {
-      this.state.phase = "PEDESTAL_EMERGENCE";
+    } else if (p <= 0.95) {
+      this.state.phase = "ARCHITECTURAL_PROPS";
     } else if (p < 1.00) {
-      this.state.phase = "COMPASS_ASSEMBLY";
+      this.state.phase = "PEDESTAL_EMERGENCE";
     } else {
       this.state.phase = "MUSEUM_IDLE";
     }

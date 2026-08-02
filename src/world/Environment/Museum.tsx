@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { WorldPhase } from "@/world/WorldController";
@@ -8,10 +8,13 @@ import { WorldPhase } from "@/world/WorldController";
 /**
  * Museum.tsx — Environment/
  *
- * Procedural PBR Architectural Gallery.
- * Dimensions: 25m wide × 15m high × 36m deep
- * Phased arrival material reveal animation.
+ * Monumental Procedural Architectural Exhibition Hall.
+ * Scale Proportions:
+ *  - Width: 28m (x: -14 to +14)
+ *  - Length: 46m (z: -23 to +23)
+ *  - Height: 14m (y: 0 to 14)
  */
+
 interface MuseumProps {
   phase: WorldPhase;
   progress?: number;
@@ -24,50 +27,59 @@ export function CompassPedestal({
   opacity?: number;
   positionY?: number;
 }) {
-  const groupRef = useRef<THREE.Group>(null);
-
   return (
-    <group ref={groupRef} position={[0, positionY, 0]}>
-      {/* Circular lower plinth */}
-      <mesh castShadow receiveShadow position={[0, 0.12, 0]}>
-        <cylinderGeometry args={[0.95, 1.05, 0.24, 32]} />
+    <group position={[0, positionY, 0]}>
+      {/* Outer base plinth - dark slate */}
+      <mesh castShadow receiveShadow position={[0, 0.125, 0]}>
+        <cylinderGeometry args={[1.15, 1.25, 0.25, 36]} />
         <meshStandardMaterial
-          color="#363030"
-          roughness={0.75}
-          metalness={0.20}
+          color="#221E1F"
+          roughness={0.70}
+          metalness={0.25}
           transparent
           opacity={opacity}
         />
       </mesh>
-      {/* Main concrete column */}
-      <mesh castShadow receiveShadow position={[0, 0.72, 0]}>
-        <cylinderGeometry args={[0.60, 0.65, 0.96, 32]} />
+      {/* Brushed brass accent ring */}
+      <mesh castShadow receiveShadow position={[0, 0.27, 0]}>
+        <cylinderGeometry args={[1.12, 1.12, 0.04, 36]} />
         <meshStandardMaterial
-          color="#464040"
+          color="#8C7040"
+          roughness={0.35}
+          metalness={0.85}
+          transparent
+          opacity={opacity}
+        />
+      </mesh>
+      {/* Main concrete/stone column shaft */}
+      <mesh castShadow receiveShadow position={[0, 0.75, 0]}>
+        <cylinderGeometry args={[0.72, 0.78, 0.92, 36]} />
+        <meshStandardMaterial
+          color="#332E2F"
           roughness={0.80}
           metalness={0.15}
           transparent
           opacity={opacity}
         />
       </mesh>
-      {/* Top display cap */}
-      <mesh castShadow receiveShadow position={[0, 1.24, 0]}>
-        <cylinderGeometry args={[0.72, 0.70, 0.08, 32]} />
+      {/* Top cap - dark steel rim */}
+      <mesh castShadow receiveShadow position={[0, 1.25, 0]}>
+        <cylinderGeometry args={[0.82, 0.80, 0.08, 36]} />
         <meshStandardMaterial
-          color="#565050"
-          roughness={0.60}
-          metalness={0.35}
+          color="#1F1C1D"
+          roughness={0.45}
+          metalness={0.75}
           transparent
           opacity={opacity}
         />
       </mesh>
-      {/* Polished top face reflection cap */}
-      <mesh receiveShadow position={[0, 1.282, 0]}>
-        <cylinderGeometry args={[0.68, 0.68, 0.005, 32]} />
+      {/* Polished top display face */}
+      <mesh receiveShadow position={[0, 1.292, 0]}>
+        <cylinderGeometry args={[0.78, 0.78, 0.006, 36]} />
         <meshStandardMaterial
-          color="#262020"
+          color="#141112"
           roughness={0.15}
-          metalness={0.80}
+          metalness={0.90}
           transparent
           opacity={opacity}
         />
@@ -80,222 +92,316 @@ export const Museum: React.FC<MuseumProps> = ({ phase, progress = 0 }) => {
   const floorMeshRef = useRef<THREE.Mesh>(null);
   const floorMatRef = useRef<THREE.MeshStandardMaterial>(null);
   const wallGroupRef = useRef<THREE.Group>(null);
-  const wallMatRef = useRef<THREE.MeshStandardMaterial>(null);
   const pillarsGroupRef = useRef<THREE.Group>(null);
-  const pillarMatRef = useRef<THREE.MeshStandardMaterial>(null);
-  const beamsGroupRef = useRef<THREE.Group>(null);
-  const steelMatRef = useRef<THREE.MeshStandardMaterial>(null);
+  const ceilingGroupRef = useRef<THREE.Group>(null);
+  const propsGroupRef = useRef<THREE.Group>(null);
   const pedestalGroupRef = useRef<THREE.Group>(null);
+
+  // Pillar positions (10 monumental pillars forming side aisles)
+  const pillarPositions = useMemo<[number, number, number][]>(
+    () => [
+      [-10, 0, -18],
+      [10, 0, -18],
+      [-10, 0, -9],
+      [10, 0, -9],
+      [-10, 0, 0],
+      [10, 0, 0],
+      [-10, 0, 9],
+      [10, 0, 9],
+      [-10, 0, 18],
+      [10, 0, 18],
+    ],
+    []
+  );
+
+  // Side plinth positions (architectural gallery negative space)
+  const sidePlinths = useMemo<[number, number, number][]>(
+    () => [
+      [-11.5, 0, -13.5],
+      [11.5, 0, -13.5],
+      [-11.5, 0, 13.5],
+      [11.5, 0, 13.5],
+    ],
+    []
+  );
 
   useFrame((_, delta) => {
     const p = progress;
-    const lerpSpeed = Math.min(delta * 5, 1);
+    const lerpSpeed = Math.min(delta * 6, 1);
 
-    // 1. Floor assembly progress (10% to 20%)
-    const fProg = Math.min(1, Math.max(0, (p - 0.08) / 0.12));
+    // 1. Floor assembly (10% to 20%): physical radial scale expansion
+    const fProg = Math.min(1, Math.max(0, (p - 0.10) / 0.10));
     if (floorMeshRef.current && floorMatRef.current) {
-      const targetScaleXZ = fProg > 0 ? 0.05 + fProg * 0.95 : 0.001;
-      const targetOpacity = fProg > 0 ? 0.85 + fProg * 0.15 : 0;
+      const targetScaleXZ = fProg > 0 ? fProg : 0.0001;
+      const targetOpacity = fProg > 0 ? 0.90 + fProg * 0.10 : 0;
       floorMeshRef.current.scale.x = THREE.MathUtils.lerp(floorMeshRef.current.scale.x, targetScaleXZ, lerpSpeed);
       floorMeshRef.current.scale.y = THREE.MathUtils.lerp(floorMeshRef.current.scale.y, targetScaleXZ, lerpSpeed);
       floorMatRef.current.opacity = THREE.MathUtils.lerp(floorMatRef.current.opacity, targetOpacity, lerpSpeed);
     }
 
-    // 2. Pillars physical growth (20% to 35%)
-    const pilProg = Math.min(1, Math.max(0, (p - 0.18) / 0.17));
-    if (pillarsGroupRef.current && pillarMatRef.current) {
-      const targetScaleY = pilProg > 0 ? pilProg : 0.001;
-      const targetOpacity = pilProg > 0 ? 0.88 + pilProg * 0.12 : 0;
-      pillarsGroupRef.current.children.forEach((child) => {
-        child.scale.y = THREE.MathUtils.lerp(child.scale.y, targetScaleY, lerpSpeed);
+    // 2. Pillars physical staggered vertical rise (20% to 35%)
+    if (pillarsGroupRef.current) {
+      pillarsGroupRef.current.children.forEach((pillarGroup, idx) => {
+        // Stagger rise timing across pillar index
+        const startP = 0.20 + (idx / pillarPositions.length) * 0.07;
+        const pilProg = Math.min(1, Math.max(0, (p - startP) / 0.08));
+        const targetPosY = THREE.MathUtils.lerp(-14, 0, pilProg);
+        pillarGroup.position.y = THREE.MathUtils.lerp(pillarGroup.position.y, targetPosY, lerpSpeed);
       });
-      pillarMatRef.current.opacity = THREE.MathUtils.lerp(pillarMatRef.current.opacity, targetOpacity, lerpSpeed);
     }
 
-    // 3. Walls & Beams extrusion (35% to 50%)
-    const wProg = Math.min(1, Math.max(0, (p - 0.32) / 0.18));
-    if (wallGroupRef.current && wallMatRef.current) {
-      const targetScaleY = wProg > 0 ? wProg : 0.001;
-      const targetOpacity = wProg > 0 ? 0.90 + wProg * 0.10 : 0;
-      wallGroupRef.current.children.forEach((child) => {
-        child.scale.y = THREE.MathUtils.lerp(child.scale.y, targetScaleY, lerpSpeed);
+    // 3. Walls & Steel support beams extrusion (35% to 50%)
+    const wProg = Math.min(1, Math.max(0, (p - 0.35) / 0.15));
+    if (wallGroupRef.current) {
+      const targetScaleY = wProg > 0 ? wProg : 0.0001;
+      wallGroupRef.current.children.forEach((wall) => {
+        wall.scale.y = THREE.MathUtils.lerp(wall.scale.y, targetScaleY, lerpSpeed);
       });
-      wallMatRef.current.opacity = THREE.MathUtils.lerp(wallMatRef.current.opacity, targetOpacity, lerpSpeed);
     }
 
-    if (beamsGroupRef.current && steelMatRef.current) {
-      const targetPosY = THREE.MathUtils.lerp(22, 14.85, wProg);
-      const targetOpacity = wProg > 0 ? 0.90 + wProg * 0.10 : 0;
-      beamsGroupRef.current.position.y = THREE.MathUtils.lerp(beamsGroupRef.current.position.y, targetPosY, lerpSpeed);
-      steelMatRef.current.opacity = THREE.MathUtils.lerp(steelMatRef.current.opacity, targetOpacity, lerpSpeed);
+    // 4. Ceiling & Steel trusses assembly (50% to 65%)
+    const cProg = Math.min(1, Math.max(0, (p - 0.50) / 0.15));
+    if (ceilingGroupRef.current) {
+      const targetPosY = THREE.MathUtils.lerp(22, 14, cProg);
+      ceilingGroupRef.current.position.y = THREE.MathUtils.lerp(ceilingGroupRef.current.position.y, targetPosY, lerpSpeed);
     }
 
-    // 4. Pedestal mechanical emergence (80% to 90%)
-    const pedProg = Math.min(1, Math.max(0, (p - 0.78) / 0.12));
+    // 5. Architectural Props (85% to 95%)
+    const propProg = Math.min(1, Math.max(0, (p - 0.85) / 0.10));
+    if (propsGroupRef.current) {
+      const targetScale = propProg > 0 ? propProg : 0.0001;
+      propsGroupRef.current.scale.setScalar(THREE.MathUtils.lerp(propsGroupRef.current.scale.x, targetScale, lerpSpeed));
+    }
+
+    // 6. Central Stone Pedestal emergence (95% to 100%)
+    const pedProg = Math.min(1, Math.max(0, (p - 0.95) / 0.05));
     if (pedestalGroupRef.current) {
-      const targetPedY = THREE.MathUtils.lerp(-1.4, 0, pedProg);
+      const targetPedY = THREE.MathUtils.lerp(-1.5, 0, pedProg);
       pedestalGroupRef.current.position.y = THREE.MathUtils.lerp(pedestalGroupRef.current.position.y, targetPedY, lerpSpeed);
     }
   });
 
-  const pillarPositions: [number, number, number][] = [
-    [-9, 0, -12],
-    [9, 0, -12],
-    [-9, 0, -4],
-    [9, 0, -4],
-    [-9, 0, 4],
-    [9, 0, 4],
-    [-9, 0, 12],
-    [9, 0, 12],
-  ];
-
   return (
     <group>
-      {/* ─── Polished Concrete Floor (25m × 36m) ─── */}
-      <mesh ref={floorMeshRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-        <planeGeometry args={[50, 50]} />
-        <meshStandardMaterial
-          ref={floorMatRef}
-          color="#3A3636"
-          roughness={0.30}
-          metalness={0.45}
-          transparent
-          opacity={0}
-        />
-      </mesh>
+      {/* ─── Polished Dark Concrete Floor (28m × 46m) ─── */}
+      <group>
+        <mesh
+          ref={floorMeshRef}
+          rotation={[-Math.PI / 2, 0, 0]}
+          position={[0, 0, 0]}
+          receiveShadow
+        >
+          <planeGeometry args={[28, 46, 14, 23]} />
+          <meshStandardMaterial
+            ref={floorMatRef}
+            color="#1D1A1B"
+            roughness={0.24}
+            metalness={0.45}
+            transparent
+            opacity={0}
+          />
+        </mesh>
 
-      {/* ─── Concrete Ceiling (15m Height) ─── */}
-      <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 15, 0]}>
-        <planeGeometry args={[50, 50]} />
-        <meshStandardMaterial
-          ref={wallMatRef}
-          color="#2B2727"
-          roughness={0.90}
-          metalness={0.08}
-          transparent
-          opacity={0}
-        />
-      </mesh>
-
-      {/* ─── Walls (25m Wide Hall Boundaries) ─── */}
-      <group ref={wallGroupRef}>
-        {/* Back wall */}
-        <mesh position={[0, 7.5, -18]} receiveShadow>
-          <planeGeometry args={[26, 15]} />
-          <meshStandardMaterial
-            ref={wallMatRef}
-            color="#322E2E"
-            roughness={0.90}
-            metalness={0.08}
-            transparent
-            opacity={0}
-          />
-        </mesh>
-        {/* Left wall */}
-        <mesh position={[-12.5, 7.5, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
-          <planeGeometry args={[36, 15]} />
-          <meshStandardMaterial
-            ref={wallMatRef}
-            color="#2E2A2A"
-            roughness={0.90}
-            metalness={0.08}
-            transparent
-            opacity={0}
-          />
-        </mesh>
-        {/* Right wall */}
-        <mesh position={[12.5, 7.5, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
-          <planeGeometry args={[36, 15]} />
-          <meshStandardMaterial
-            ref={wallMatRef}
-            color="#2E2A2A"
-            roughness={0.90}
-            metalness={0.08}
-            transparent
-            opacity={0}
-          />
-        </mesh>
+        {/* Floor Seam Grid Lines (Brass & Steel Expansion Joints) */}
+        {[-10, -5, 0, 5, 10].map((x) => (
+          <mesh key={`fseam-x-${x}`} position={[x, 0.002, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[0.04, 46]} />
+            <meshStandardMaterial color="#6A5A3D" roughness={0.3} metalness={0.8} />
+          </mesh>
+        ))}
+        {[-18, -9, 0, 9, 18].map((z) => (
+          <mesh key={`fseam-z-${z}`} position={[0, 0.002, z]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[28, 0.04]} />
+            <meshStandardMaterial color="#6A5A3D" roughness={0.3} metalness={0.8} />
+          </mesh>
+        ))}
       </group>
 
-      {/* ─── Tall Concrete Pillars (15m Tall) ─── */}
+      {/* ─── Surrounding Concrete Walls (28m Wide × 46m Deep × 14m High) ─── */}
+      <group ref={wallGroupRef}>
+        {/* Back Wall */}
+        <group position={[0, 0, -23]}>
+          <mesh position={[0, 7, 0]} receiveShadow castShadow>
+            <boxGeometry args={[28, 14, 0.6]} />
+            <meshStandardMaterial color="#242021" roughness={0.85} metalness={0.10} />
+          </mesh>
+          {/* Vertical steel ribs on back wall */}
+          {[-10, -5, 0, 5, 10].map((x) => (
+            <mesh key={`bw-rib-${x}`} position={[x, 7, 0.35]}>
+              <boxGeometry args={[0.25, 14, 0.15]} />
+              <meshStandardMaterial color="#181516" roughness={0.45} metalness={0.85} />
+            </mesh>
+          ))}
+        </group>
+
+        {/* Left Wall */}
+        <group position={[-14, 0, 0]}>
+          <mesh position={[0, 7, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow castShadow>
+            <boxGeometry args={[46, 14, 0.6]} />
+            <meshStandardMaterial color="#221E1F" roughness={0.85} metalness={0.10} />
+          </mesh>
+          {/* Horizontal wall beam */}
+          <mesh position={[0.35, 7, 0]} rotation={[0, Math.PI / 2, 0]}>
+            <boxGeometry args={[46, 0.35, 0.15]} />
+            <meshStandardMaterial color="#181516" roughness={0.40} metalness={0.85} />
+          </mesh>
+        </group>
+
+        {/* Right Wall */}
+        <group position={[14, 0, 0]}>
+          <mesh position={[0, 7, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow castShadow>
+            <boxGeometry args={[46, 14, 0.6]} />
+            <meshStandardMaterial color="#221E1F" roughness={0.85} metalness={0.10} />
+          </mesh>
+          {/* Horizontal wall beam */}
+          <mesh position={[-0.35, 7, 0]} rotation={[0, -Math.PI / 2, 0]}>
+            <boxGeometry args={[46, 0.35, 0.15]} />
+            <meshStandardMaterial color="#181516" roughness={0.40} metalness={0.85} />
+          </mesh>
+        </group>
+      </group>
+
+      {/* ─── Staggered Monumental Concrete Pillars (14m Tall) ─── */}
       <group ref={pillarsGroupRef}>
         {pillarPositions.map(([x, y, z], i) => (
-          <group key={i} position={[x, y, z]}>
-            {/* Cylinder column */}
-            <mesh castShadow receiveShadow position={[0, 7.5, 0]}>
-              <cylinderGeometry args={[0.65, 0.72, 15, 24]} />
-              <meshStandardMaterial
-                ref={pillarMatRef}
-                color="#423D3D"
-                roughness={0.80}
-                metalness={0.12}
-                transparent
-                opacity={0}
-              />
+          <group key={`pillar-${i}`} position={[x, y, z]}>
+            {/* Square base plinth */}
+            <mesh position={[0, 0.15, 0]} castShadow receiveShadow>
+              <boxGeometry args={[1.5, 0.3, 1.5]} />
+              <meshStandardMaterial color="#2D2829" roughness={0.80} metalness={0.20} />
             </mesh>
-            {/* Steel base ring */}
-            <mesh position={[0, 0.05, 0]}>
-              <cylinderGeometry args={[0.85, 0.85, 0.1, 24]} />
-              <meshStandardMaterial
-                ref={steelMatRef}
-                color="#5A5252"
-                roughness={0.35}
-                metalness={0.80}
-                transparent
-                opacity={0}
-              />
+            {/* Octagonal concrete shaft */}
+            <mesh position={[0, 7, 0]} castShadow receiveShadow>
+              <cylinderGeometry args={[0.65, 0.75, 13.4, 8]} />
+              <meshStandardMaterial color="#3A3435" roughness={0.82} metalness={0.12} />
             </mesh>
-            {/* Steel capital ring */}
-            <mesh position={[0, 14.95, 0]}>
-              <cylinderGeometry args={[0.85, 0.85, 0.1, 24]} />
-              <meshStandardMaterial
-                ref={steelMatRef}
-                color="#282525"
-                roughness={0.45}
-                metalness={0.88}
-                transparent
-                opacity={0}
-              />
+            {/* Steel base collar */}
+            <mesh position={[0, 0.35, 0]}>
+              <cylinderGeometry args={[0.80, 0.80, 0.12, 16]} />
+              <meshStandardMaterial color="#54484A" roughness={0.35} metalness={0.80} />
+            </mesh>
+            {/* Steel capital bracket at ceiling joint */}
+            <mesh position={[0, 13.8, 0]}>
+              <boxGeometry args={[1.6, 0.4, 1.6]} />
+              <meshStandardMaterial color="#1A1718" roughness={0.45} metalness={0.88} />
             </mesh>
           </group>
         ))}
       </group>
 
-      {/* ─── Structural Ceiling Beams ─── */}
-      <group ref={beamsGroupRef} position={[0, 18, 0]}>
-        {[-12, -4, 4, 12].map((z, i) => (
-          <mesh key={`t${i}`} position={[0, 0, z]} castShadow>
-            <boxGeometry args={[25, 0.35, 0.35]} />
-            <meshStandardMaterial
-              ref={steelMatRef}
-              color="#222020"
-              roughness={0.40}
-              metalness={0.85}
-              transparent
-              opacity={0}
-            />
+      {/* ─── Industrial Ceiling & Steel Roof Trusses ─── */}
+      <group ref={ceilingGroupRef} position={[0, 14, 0]}>
+        {/* Main Ceiling Concrete Slab */}
+        <mesh position={[0, 0.2, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[28, 46]} />
+          <meshStandardMaterial color="#1B1819" roughness={0.92} metalness={0.08} />
+        </mesh>
+
+        {/* Transverse Steel Trusses across width */}
+        {[-18, -9, 0, 9, 18].map((z, idx) => (
+          <group key={`truss-${idx}`} position={[0, -0.3, z]}>
+            {/* Main top I-beam */}
+            <mesh castShadow>
+              <boxGeometry args={[28, 0.4, 0.3]} />
+              <meshStandardMaterial color="#1A1718" roughness={0.40} metalness={0.85} />
+            </mesh>
+            {/* Lower support rail */}
+            <mesh position={[0, -0.6, 0]}>
+              <boxGeometry args={[28, 0.2, 0.2]} />
+              <meshStandardMaterial color="#141213" roughness={0.40} metalness={0.85} />
+            </mesh>
+            {/* Diagonal web struts */}
+            {[-12, -8, -4, 0, 4, 8, 12].map((xStrut) => (
+              <mesh key={`strut-${xStrut}`} position={[xStrut, -0.3, 0]} rotation={[0, 0, Math.PI / 4]}>
+                <boxGeometry args={[0.8, 0.12, 0.12]} />
+                <meshStandardMaterial color="#1A1718" roughness={0.40} metalness={0.85} />
+              </mesh>
+            ))}
+          </group>
+        ))}
+
+        {/* Longitudinal Steel Beams along length */}
+        {[-10, 0, 10].map((x, idx) => (
+          <mesh key={`long-beam-${idx}`} position={[x, -0.3, 0]}>
+            <boxGeometry args={[0.3, 0.35, 46]} />
+            <meshStandardMaterial color="#181516" roughness={0.40} metalness={0.85} />
           </mesh>
         ))}
-        {[-9, 9].map((x, i) => (
-          <mesh key={`l${i}`} position={[x, 0, 0]} castShadow>
-            <boxGeometry args={[0.30, 0.30, 36]} />
-            <meshStandardMaterial
-              ref={steelMatRef}
-              color="#222020"
-              roughness={0.40}
-              metalness={0.85}
-              transparent
-              opacity={0}
-            />
-          </mesh>
+
+        {/* Industrial Spotlight Fixture Housings (Physical 3D Light Models attached to Trusses) */}
+        {[-18, -9, 0, 9, 18].map((z, idx) => (
+          <group key={`spot-housing-${idx}`} position={[0, -0.8, z]}>
+            {/* Mounting bracket */}
+            <mesh position={[0, 0.1, 0]}>
+              <boxGeometry args={[0.3, 0.2, 0.3]} />
+              <meshStandardMaterial color="#110F10" roughness={0.3} metalness={0.9} />
+            </mesh>
+            {/* Cylindrical housing */}
+            <mesh position={[0, -0.3, 0]} rotation={[Math.PI / 6, 0, 0]}>
+              <cylinderGeometry args={[0.32, 0.38, 0.6, 24]} />
+              <meshStandardMaterial color="#1E1B1C" roughness={0.35} metalness={0.85} />
+            </mesh>
+            {/* Glass lens cap */}
+            <mesh position={[0, -0.58, 0.12]} rotation={[Math.PI / 6, 0, 0]}>
+              <cylinderGeometry args={[0.34, 0.34, 0.04, 24]} />
+              <meshStandardMaterial color="#443D3F" roughness={0.10} metalness={0.95} />
+            </mesh>
+          </group>
         ))}
       </group>
 
-      {/* ─── Compass Concrete Pedestal (Emerges at 80-90%) ─── */}
-      <group ref={pedestalGroupRef} position={[0, -1.3, 0]}>
+      {/* ─── Architectural Props (Barriers, Plinths, Trims) ─── */}
+      <group ref={propsGroupRef}>
+        {/* Steel Stanchion Barriers around Central Pedestal Zone */}
+        {[-3.5, 3.5].map((x) =>
+          [-5, 5].map((z) => (
+            <group key={`stanchion-${x}-${z}`} position={[x, 0, z]}>
+              {/* Heavy base */}
+              <mesh position={[0, 0.04, 0]} castShadow>
+                <cylinderGeometry args={[0.22, 0.25, 0.08, 20]} />
+                <meshStandardMaterial color="#1C1819" roughness={0.35} metalness={0.85} />
+              </mesh>
+              {/* Post */}
+              <mesh position={[0, 0.5, 0]} castShadow>
+                <cylinderGeometry args={[0.035, 0.035, 0.92, 16]} />
+                <meshStandardMaterial color="#2E282A" roughness={0.30} metalness={0.90} />
+              </mesh>
+              {/* Top brass ball cap */}
+              <mesh position={[0, 0.98, 0]}>
+                <sphereGeometry args={[0.06, 16, 16]} />
+                <meshStandardMaterial color="#8C7040" roughness={0.30} metalness={0.88} />
+              </mesh>
+            </group>
+          ))
+        )}
+
+        {/* Barrier Connecting Steel Rods */}
+        {[-3.5, 3.5].map((x) => (
+          <mesh key={`bar-rail-z-${x}`} position={[x, 0.85, 0]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.015, 0.015, 10, 12]} />
+            <meshStandardMaterial color="#2E282A" roughness={0.35} metalness={0.90} />
+          </mesh>
+        ))}
+
+        {/* Secondary Exhibition Gallery Plinths in Side Aisles */}
+        {sidePlinths.map(([x, y, z], idx) => (
+          <group key={`side-plinth-${idx}`} position={[x, y, z]}>
+            <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
+              <boxGeometry args={[1.4, 1.0, 1.4]} />
+              <meshStandardMaterial color="#262223" roughness={0.82} metalness={0.15} />
+            </mesh>
+            <mesh position={[0, 1.01, 0]}>
+              <boxGeometry args={[1.3, 0.02, 1.3]} />
+              <meshStandardMaterial color="#181516" roughness={0.25} metalness={0.80} />
+            </mesh>
+          </group>
+        ))}
+      </group>
+
+      {/* ─── Central Circular Stone Pedestal (Rises at 95%-100%) ─── */}
+      <group ref={pedestalGroupRef} position={[0, -1.5, 0]}>
         <CompassPedestal opacity={1} />
       </group>
     </group>
   );
 };
-
