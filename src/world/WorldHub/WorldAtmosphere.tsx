@@ -14,6 +14,8 @@ import { WorldPhase } from "@/world/WorldController";
  *  3. Construction Debris Dust Stream (20%-50% pillar/wall growth)
  *  4. Floating Ambient Dust Particles
  *  5. Particle Tunnel transition (0%-10% hero dissolve)
+ *
+ * Adjusted for 9.6m lowered ceiling height.
  */
 
 // ─── Volumetric Red Spotlight Rays & Dust ──────────────────────────────────────
@@ -22,29 +24,24 @@ function VolumetricLightRays({ progress = 0 }: { progress?: number }) {
   const ref = useRef<THREE.Points>(null);
   const matRef = useRef<THREE.PointsMaterial>(null);
 
-  const { positions, baseHeights } = useMemo(() => {
+  const { positions } = useMemo(() => {
     const count = 750;
     const pos = new Float32Array(count * 3);
-    const baseH = new Float32Array(count);
-
-    // 5 Spotlight cone positions along central aisle: z = [-18, -9, 0, 9, 18]
-    const spotlightZs = [-18, -9, 0, 9, 18];
+    const spotlightZs = [-16, -8, 0, 8, 16];
 
     for (let i = 0; i < count; i++) {
       const spotIdx = i % 5;
       const spotZ = spotlightZs[spotIdx];
       const angle = Math.random() * Math.PI * 2;
-      const h = Math.random() * 12.5; // height within light shaft (0 to 12.5m)
-      const r = Math.random() * (0.2 + (h / 12.5) * 2.8); // cone radius widening downward
+      const h = Math.random() * 8.8; // height within light shaft (0 to 8.8m)
+      const r = Math.random() * (0.2 + (h / 8.8) * 2.2);
 
       pos[i * 3 + 0] = Math.cos(angle) * r;
-      pos[i * 3 + 1] = 13.2 - h;
+      pos[i * 3 + 1] = 9.2 - h;
       pos[i * 3 + 2] = spotZ + Math.sin(angle) * r;
-
-      baseH[i] = h;
     }
 
-    return { positions: pos, baseHeights: baseH };
+    return { positions: pos };
   }, []);
 
   const geo = useMemo(() => {
@@ -58,7 +55,6 @@ function VolumetricLightRays({ progress = 0 }: { progress?: number }) {
     const t = clock.getElapsedTime();
     const lerpSpeed = Math.min(delta * 4, 1);
 
-    // Fade in during ATMOSPHERE_EMERGENCE (75% to 85%)
     const atmoProg = Math.min(1, Math.max(0, (progress - 0.70) / 0.15));
     const targetOpacity = atmoProg * 0.65;
 
@@ -69,9 +65,9 @@ function VolumetricLightRays({ progress = 0 }: { progress?: number }) {
       const count = posArr.length / 3;
 
       for (let i = 0; i < count; i++) {
-        posArr[i * 3 + 1] -= 0.003; // fall slowly through light shaft
+        posArr[i * 3 + 1] -= 0.003;
         if (posArr[i * 3 + 1] < 0.2) {
-          posArr[i * 3 + 1] = 13.0;
+          posArr[i * 3 + 1] = 9.0;
         }
       }
       ref.current.geometry.attributes.position.needsUpdate = true;
@@ -105,9 +101,9 @@ function FloatingDust() {
     const velocities = new Float32Array(count * 3);
 
     for (let i = 0; i < count; i++) {
-      positions[i * 3 + 0] = (Math.random() - 0.5) * 28;
-      positions[i * 3 + 1] = Math.random() * 13;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 44;
+      positions[i * 3 + 0] = (Math.random() - 0.5) * 26;
+      positions[i * 3 + 1] = Math.random() * 9.2;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 40;
 
       velocities[i * 3 + 0] = (Math.random() - 0.5) * 0.0012;
       velocities[i * 3 + 1] = Math.random() * 0.0015 + 0.0004;
@@ -133,10 +129,10 @@ function FloatingDust() {
       pos[i * 3 + 1] += velocities[i * 3 + 1];
       pos[i * 3 + 2] += velocities[i * 3 + 2];
 
-      if (pos[i * 3 + 1] > 13.5) {
+      if (pos[i * 3 + 1] > 9.4) {
         pos[i * 3 + 1] = 0.1;
-        pos[i * 3 + 0] = (Math.random() - 0.5) * 28;
-        pos[i * 3 + 2] = (Math.random() - 0.5) * 44;
+        pos[i * 3 + 0] = (Math.random() - 0.5) * 26;
+        pos[i * 3 + 2] = (Math.random() - 0.5) * 40;
       }
     }
 
@@ -168,7 +164,6 @@ function GroundFog({ progress = 0 }: { progress?: number }) {
     const t = clock.getElapsedTime();
     const lerpSpeed = Math.min(delta * 4, 1);
 
-    // Roll fog across floor starting at 75% progress
     const fogProg = Math.min(1, Math.max(0, (progress - 0.70) / 0.15));
     const targetOpacity = fogProg * (0.08 + Math.sin(t * 0.22) * 0.02);
 
@@ -178,7 +173,7 @@ function GroundFog({ progress = 0 }: { progress?: number }) {
 
   return (
     <mesh ref={ref} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.04, 0]}>
-      <planeGeometry args={[32, 48]} />
+      <planeGeometry args={[30, 44]} />
       <meshBasicMaterial
         ref={matRef}
         color="#26060A"
@@ -202,9 +197,9 @@ function ConstructionDebris({ progress = 0 }: { progress?: number }) {
     const vel = new Float32Array(count * 3);
 
     for (let i = 0; i < count; i++) {
-      pos[i * 3 + 0] = (Math.random() - 0.5) * 26;
-      pos[i * 3 + 1] = Math.random() * 14;
-      pos[i * 3 + 2] = (Math.random() - 0.5) * 40;
+      pos[i * 3 + 0] = (Math.random() - 0.5) * 24;
+      pos[i * 3 + 1] = Math.random() * 9.6;
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 38;
 
       vel[i * 3 + 0] = (Math.random() - 0.5) * 0.002;
       vel[i * 3 + 1] = -(Math.random() * 0.01 + 0.004);
@@ -232,7 +227,7 @@ function ConstructionDebris({ progress = 0 }: { progress?: number }) {
       for (let i = 0; i < count; i++) {
         posArr[i * 3 + 1] += velocities[i * 3 + 1];
         if (posArr[i * 3 + 1] < 0.1) {
-          posArr[i * 3 + 1] = 14;
+          posArr[i * 3 + 1] = 9.6;
         }
       }
       ref.current.geometry.attributes.position.needsUpdate = true;
@@ -267,7 +262,7 @@ function ParticleTunnel({ progress = 0 }: { progress?: number }) {
 
     for (let i = 0; i < count; i++) {
       const angle = Math.random() * Math.PI * 2;
-      const radius = 1.2 + Math.random() * 5.0;
+      const radius = 1.2 + Math.random() * 4.5;
       pos[i * 3 + 0] = Math.cos(angle) * radius;
       pos[i * 3 + 1] = Math.sin(angle) * radius + 1.5;
       pos[i * 3 + 2] = (Math.random() - 0.5) * 35;

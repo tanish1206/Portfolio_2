@@ -12,8 +12,10 @@ import { WorldPhase } from "@/world/WorldController";
  * Strict Palette:
  *  - Primary Accent: Deep Cinematic Red (#B11226)
  *  - Secondary: Neutral White (#EAEAEA)
- *  - Ambient: Warm Ivory / Indirect Shadow Fill (#D8C4B6 / #504648)
+ *  - Ambient: Warm Ivory / Indirect Shadow Fill (#D8C4B6)
  *  - ZERO cyan or blue anywhere.
+ *
+ * Proportionate to 9.6m lowered ceiling height.
  */
 
 interface WorldLightingProps {
@@ -28,14 +30,14 @@ export const WorldLighting: React.FC<WorldLightingProps> = ({ phase, progress = 
   const mainSpotRef = useRef<THREE.SpotLight>(null);
   const mainSpotTargetRef = useRef<THREE.Object3D>(null);
 
-  // 5 Overhead Red Spotlights along central gallery aisle
+  // 5 Overhead Red Spotlights along central gallery aisle (Ceiling height: 9.6m)
   const spotlightPositions: [number, number, number][] = useMemo(
     () => [
-      [0, 13.2, -18],
-      [0, 13.2, -9],
-      [0, 13.2, 0],
-      [0, 13.2, 9],
-      [0, 13.2, 18],
+      [0, 9.2, -16],
+      [0, 9.2, -8],
+      [0, 9.2, 0],
+      [0, 9.2, 8],
+      [0, 9.2, 16],
     ],
     []
   );
@@ -131,7 +133,7 @@ export const WorldLighting: React.FC<WorldLightingProps> = ({ phase, progress = 
       {/* Key Directional Architectural Sun Light — casts realistic shadows across pillars */}
       <directionalLight
         ref={dirLightRef}
-        position={[14, 24, 12]}
+        position={[12, 18, 10]}
         color="#F5E8D8"
         intensity={1.2}
         castShadow
@@ -143,11 +145,11 @@ export const WorldLighting: React.FC<WorldLightingProps> = ({ phase, progress = 
       {/* Primary Deep Cinematic Red Spotlight on Pedestal (Origin [0, 0, 0]) */}
       <spotLight
         ref={mainSpotRef}
-        position={[0, 13.5, 0.5]}
+        position={[0, 9.4, 0.5]}
         color="#B11226"
         angle={0.55}
         penumbra={0.75}
-        distance={36}
+        distance={28}
         intensity={0}
         castShadow
         shadow-mapSize-width={2048}
@@ -167,7 +169,7 @@ export const WorldLighting: React.FC<WorldLightingProps> = ({ phase, progress = 
             color="#B11226"
             angle={0.50}
             penumbra={0.80}
-            distance={32}
+            distance={25}
             intensity={0}
             castShadow
             shadow-mapSize-width={1024}
@@ -186,24 +188,24 @@ export const WorldLighting: React.FC<WorldLightingProps> = ({ phase, progress = 
       {/* Secondary Soft Neutral White Rim Lights highlighting Concrete Pillars */}
       <pointLight
         ref={rimLeftRef}
-        position={[-13.5, 9, 0]}
+        position={[-12.5, 6.5, 0]}
         color="#EAEAEA"
         intensity={1.0}
-        distance={35}
+        distance={30}
       />
       <pointLight
         ref={rimRightRef}
-        position={[13.5, 9, 0]}
+        position={[12.5, 6.5, 0]}
         color="#EAEAEA"
         intensity={1.0}
-        distance={35}
+        distance={30}
       />
       <pointLight
         ref={rimBackRef}
-        position={[0, 9, -22]}
+        position={[0, 6.5, -20]}
         color="#EAEAEA"
         intensity={0.7}
-        distance={35}
+        distance={30}
       />
     </group>
   );
